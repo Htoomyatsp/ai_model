@@ -1,67 +1,126 @@
-## Endpoint
-POST /predict
+# Greenhouse AI Platform
 
-## Request Format
-- Content-Type: application/json
-- Shape: 20 timesteps × 21 features
-- Format: A list of 20 lists (each inner list contains 21 float values)
-See the example_request1.json and example_request2.json for request examples
+This API + web dashboard provides:
+- enhanced deep learning architectures (baseline, hybrid, multi-input)
+- automated data processing and optional dynamic scaling
+- MPC simulation and scenario benchmarking
+- trend visualization and explainability heatmaps
+- incremental continuous-learning updates
 
-Each inner list must follow this exact order of features per timestep
+## Quick Start
+```bash
+cd /Users/nickcecchin/Desktop/ai_model
+source /Users/nickcecchin/Desktop/ai_model/api/.venv/bin/activate
+pip install -r /Users/nickcecchin/Desktop/ai_model/api/requirements.txt
+uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
+```
+Open: `http://127.0.0.1:8000`
 
-- 0	CO2air
-- 1	Cum_irr
-- 2	Tair
-- 3	Tot_PAR
-- 4	Ventwind
-- 5	AssimLight
-- 6	VentLee
-- 7	HumDef
-- 8	co2_dos
-- 9	PipeGrow
-- 10 EnScr
-- 11 BlackScr
-- 12 Windsp
-- 13 Winddir
-- 14 Tout
-- 15 Rhout
-- 16 AbsHumOut
-- 17 PARout
-- 18 Iglob
-- 19 Pyrgeo
-- 20 RadSum
+## Model Training (Baseline + Enhanced)
+Train and compare baseline vs enhanced models:
+```bash
+python /Users/nickcecchin/Desktop/ai_model/api/train_hybrid_models.py --architecture all
+```
 
-## Response Format
+Supported architectures:
+- `baseline_lstm`
+- `lstm_cnn`
+- `bi_lstm`
+- `multi_input_hybrid` (separate greenhouse/weather branches)
+
+Outputs in `/Users/nickcecchin/Desktop/ai_model/api/checkpoint/`:
+- per-model folders (`baseline_lstm/`, `lstm_cnn/`, `bi_lstm/`, `multi_input_hybrid/`)
+- `model.keras`, `feature_scaler.save`, `target_scaler.save` (best promoted model)
+- `model_metadata.json`
+- `training_summary.json`
+- `model_comparison.json`, `model_comparison.csv` (RMSE + MAPE comparison)
+
+## Benchmark Existing Checkpoints
+```bash
+python /Users/nickcecchin/Desktop/ai_model/api/benchmark_models.py
+```
+Produces `benchmark_comparison.json` and `benchmark_comparison.csv`.
+
+## Automated Data Processing
+Batch processing of `GreenhouseClimate.csv` + `Weather.csv`:
+```bash
+python /Users/nickcecchin/Desktop/ai_model/api/automated_data_pipeline.py
+```
+Produces cleaned merged features and summary stats in `checkpoint/`.
+
+## Continuous Learning (Incremental Update)
+API endpoint:
+- `POST /continuous/update`
+
+This ingests newly appended CSV rows, updates scalers incrementally, and fine-tunes the deployed model.
+
+Example request:
+```json
 {
-  "prediction": [
-    410.2, 31.5, 22.9, 710.3, 0.7, 82.5, 0.35, 5.3, 1.7, 31.0,
-    0.25, 0.15, 1.4, 180.5, 17.9, 61.0, 8.3, 505.0, 905.0, 355.0, 755.0
-  ]
+  "new_rows_limit": 4000,
+  "fine_tune_epochs": 2,
+  "batch_size": 64,
+  "dry_run": false
 }
+```
 
-- 0	CO2air
-- 1	Cum_irr
-- 2	Tair
-- 3	Tot_PAR
-- 4	Ventwind
-- 5	AssimLight
-- 6	VentLee
-- 7	HumDef
-- 8	co2_dos
-- 9	PipeGrow
-- 10 EnScr
-- 11 BlackScr
-- 12 Windsp
-- 13 Winddir
-- 14 Tout
-- 15 Rhout
-- 16 AbsHumOut
-- 17 PARout
-- 18 Iglob
-- 19 Pyrgeo
-- 20 RadSum
+## Core API Endpoints
 
-## Validation
-- Input must be exactly 20 timesteps
-- Each timestep must include exactly 21 values in the order mentioned previously
-- Values should be raw/unscaled, the API applies internal normalization
+### Prediction
+- `POST /predict`
+
+Supports two modes:
+- direct mode: provide `data` (`lookback x feature_count`)
+- automated mode: `use_automated_pipeline=true` + `automated_pipeline` payload
+
+### Pipeline
+- `GET /pipeline/default-config`
+- `POST /pipeline/prepare`
+
+Pipeline options:
+- `merge_strategy`: `inner|left|right|outer`
+- `fill_method`: `interpolate|ffill|bfill|zero`
+- `scaling_mode`: `trained|dynamic`
+
+### MPC
+- `GET /mpc/default-config`
+- `POST /mpc/simulate`
+- `POST /mpc/evaluate-scenarios`
+
+`/mpc/simulate` returns:
+- `energy_efficiency_score`
+- `stability_index`
+- `objective_trace`
+- predicted states and applied control actions
+
+Scenario benchmarking endpoint ranks scenarios by efficiency/stability.
+
+### Explainability
+- `GET /explain/default-config`
+- `POST /explain`
+
+Methods:
+- `gradient_attention` (attention-style gradient heatmap)
+- `shap_approx` (perturbation SHAP-like attribution)
+
+### Model Metadata / Comparison
+- `GET /model-info`
+- `GET /model/comparison`
+
+## Visualization Dashboard
+The web UI includes tabs for:
+- Predict
+- MPC Control
+- Explainability
+- Code Runner
+
+Features:
+- historical trend lines and feature cards
+- explainability heatmap + top contributors
+- MPC trajectories (controlled/predicted variables)
+- scenario benchmark output
+
+## Deployment Notes
+- Use Python 3.13-compatible stack from `requirements.txt`.
+- Keep `checkpoint/model_metadata.json` aligned with deployed model.
+- For production deployment, run behind a process manager (e.g., systemd, supervisor, or container orchestration) and disable `--reload`.

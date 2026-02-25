@@ -1,0 +1,34 @@
+{
+  "architecture": "bi_lstm",
+  "lookback": 20,
+  "horizon": 1,
+  "feature_count": 21,
+  "features": [
+    "CO2air",
+    "Cum_irr",
+    "Tair",
+    "Tot_PAR",
+    "Ventwind",
+    "AssimLight",
+    "VentLee",
+    "HumDef",
+    "co2_dos",
+    "PipeGrow",
+    "EnScr",
+    "BlackScr",
+    "Windsp",
+    "Winddir",
+    "Tout",
+    "Rhout",
+    "AbsHumOut",
+    "PARout",
+    "Iglob",
+    "Pyrgeo",
+    "RadSum"
+  ],
+  "metrics": {
+    "mae": 33.004634857177734,
+    "rmse": 109.32894566113313,
+    "r2": -1.0883442769599907e+22
+  }
+}

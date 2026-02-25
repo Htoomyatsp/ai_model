@@ -1,0 +1,23 @@
+{
+  "best_architecture": "bi_lstm",
+  "results": [
+    {
+      "architecture": "lstm_cnn",
+      "model_dir": "/Users/nickcecchin/Desktop/ai_model/api/checkpoint/lstm_cnn",
+      "metrics": {
+        "mae": 46.3450813293457,
+        "rmse": 143.725031799005,
+        "r2": -9.855530607189741e+22
+      }
+    },
+    {
+      "architecture": "bi_lstm",
+      "model_dir": "/Users/nickcecchin/Desktop/ai_model/api/checkpoint/bi_lstm",
+      "metrics": {
+        "mae": 33.004634857177734,
+        "rmse": 109.32894566113313,
+        "r2": -1.0883442769599907e+22
+      }
+    }
+  ]
+}

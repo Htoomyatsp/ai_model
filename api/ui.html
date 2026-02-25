@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greenhouse Predictor</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      --panel: #0f172a;
+      --accent: #38bdf8;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --error: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+    }
+    .shell {
+      width: min(1200px, 100%);
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 20px;
+      padding: 14px 16px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: 24px; letter-spacing: 0.5px; }
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      padding: 10px;
+      min-height: 100%;
+    }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 0 0 10px; color: var(--muted); line-height: 1.4; }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      background: #0b1222;
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      resize: vertical;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #0b1222;
+      background: var(--accent);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    button.secondary {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35); }
+    pre {
+      background: #0b1222;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 0;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 13px;
+      min-height: 90px;
+    }
+    ul { padding-left: 16px; margin: 0; color: var(--muted); }
+    .status { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .status.error { color: var(--error); }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: #0b1222;
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .small-textarea {
+      min-height: 120px;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .inline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .inline input[type="checkbox"] {
+      width: auto;
+      accent-color: var(--accent);
+    }
+    .pipeline-box {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      background: rgba(11, 18, 34, 0.35);
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      background: rgba(11, 18, 34, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .metric .value {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    canvas {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+      background: #0b1222;
+      display: block;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .tab-btn {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0b1222;
+      border-color: transparent;
+      font-weight: 700;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    @media (max-width: 640px) {
+      body { padding: 14px; }
+      h1 { font-size: 20px; }
+      textarea { min-height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <div class="pill">Greenhouse Predictor</div>
+        <h1>Test the /predict API with a JSON payload</h1>
+      </div>
+      <div class="pill" id="modelShapePill">Expects 20 × 21 numbers</div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab-target="predictTab">Predict</button>
+      <button class="tab-btn" data-tab-target="mpcTab">MPC Control</button>
+      <button class="tab-btn" data-tab-target="explainTab">Explainability</button>
+      <button class="tab-btn" data-tab-target="codeTab">Code Runner</button>
+    </div>
+
+    <div id="predictTab" class="tab-panel active">
+    <div class="grid">
+      <div class="card">
+        <h3>1) Paste or load JSON</h3>
+        <p id="payloadHelp">Body must be <code>{"data": [[...21 floats...], ...20 rows...]}</code>. Use the sample to start.</p>
+        <div class="inline">
+          <input id="usePipelinePredict" type="checkbox" />
+          <label for="usePipelinePredict">Use automated data pipeline for prediction</label>
+        </div>
+        <div id="predictPipelinePanel" class="pipeline-box" style="display:none;">
+          <div class="field">
+            <label for="predictMergeStrategy">Merge strategy</label>
+            <select id="predictMergeStrategy">
+              <option value="inner">inner</option>
+              <option value="left">left</option>
+              <option value="right">right</option>
+              <option value="outer">outer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="predictFillMethod">Fill method</label>
+            <select id="predictFillMethod">
+              <option value="interpolate">interpolate</option>
+              <option value="ffill">ffill</option>
+              <option value="bfill">bfill</option>
+              <option value="zero">zero</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="predictScalingMode">Scaling mode</label>
+            <select id="predictScalingMode">
+              <option value="trained">trained</option>
+              <option value="dynamic">dynamic</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="predictGreenhouseRows">Greenhouse rows JSON (optional)</label>
+            <textarea id="predictGreenhouseRows" class="small-textarea" spellcheck="false">[]</textarea>
+          </div>
+          <div class="field">
+            <label for="predictWeatherRows">Weather rows JSON (optional)</label>
+            <textarea id="predictWeatherRows" class="small-textarea" spellcheck="false">[]</textarea>
+          </div>
+          <div class="field">
+            <label for="predictMergedRows">Merged rows JSON (optional)</label>
+            <textarea id="predictMergedRows" class="small-textarea" spellcheck="false">[]</textarea>
+          </div>
+        </div>
+        <textarea id="payload" spellcheck="false" aria-label="JSON payload"></textarea>
+        <div class="actions">
+          <button type="button" id="sampleBtn">Load sample</button>
+          <button type="button" class="secondary" id="pipelineFromSampleBtn">Build pipeline sample</button>
+          <button type="button" class="secondary" id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2) Send to API</h3>
+        <p>Calls <code>POST /predict</code> on this server and shows the prediction or any validation error.</p>
+        <div class="actions">
+          <button type="button" id="sendBtn">Send request</button>
+        </div>
+        <div id="status" class="status">Idle</div>
+        <h3>Response</h3>
+        <pre id="response">Waiting for a request...</pre>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Feature order (per timestep, 21 values)</h3>
+      <ul>
+        <li>0 CO2air, 1 Cum_irr, 2 Tair, 3 Tot_PAR, 4 Ventwind, 5 AssimLight, 6 VentLee</li>
+        <li>7 HumDef, 8 co2_dos, 9 PipeGrow, 10 EnScr, 11 BlackScr, 12 Windsp, 13 Winddir</li>
+        <li>14 Tout, 15 Rhout, 16 AbsHumOut, 17 PARout, 18 Iglob, 19 Pyrgeo, 20 RadSum</li>
+      </ul>
+    </div>
+    </div>
+
+    <div id="mpcTab" class="tab-panel">
+    <div class="card" style="margin-top:8px;">
+      <h3>3) Model Predictive Control (MPC) Simulation</h3>
+      <p>Runs a receding-horizon feedback controller that adjusts greenhouse actuators and rolls the model forward.</p>
+      <div class="inline">
+        <input id="usePipelineMpc" type="checkbox" />
+        <label for="usePipelineMpc">Use automated data pipeline for MPC initial window</label>
+      </div>
+      <div id="mpcPipelinePanel" class="pipeline-box" style="display:none;">
+        <div class="field">
+          <label for="mpcMergeStrategy">Merge strategy</label>
+          <select id="mpcMergeStrategy">
+            <option value="inner">inner</option>
+            <option value="left">left</option>
+            <option value="right">right</option>
+            <option value="outer">outer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mpcFillMethod">Fill method</label>
+          <select id="mpcFillMethod">
+            <option value="interpolate">interpolate</option>
+            <option value="ffill">ffill</option>
+            <option value="bfill">bfill</option>
+            <option value="zero">zero</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mpcScalingMode">Scaling mode</label>
+          <select id="mpcScalingMode">
+            <option value="trained">trained</option>
+            <option value="dynamic">dynamic</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mpcGreenhouseRows">Greenhouse rows JSON (optional)</label>
+          <textarea id="mpcGreenhouseRows" class="small-textarea" spellcheck="false">[]</textarea>
+        </div>
+        <div class="field">
+          <label for="mpcWeatherRows">Weather rows JSON (optional)</label>
+          <textarea id="mpcWeatherRows" class="small-textarea" spellcheck="false">[]</textarea>
+        </div>
+        <div class="field">
+          <label for="mpcMergedRows">Merged rows JSON (optional)</label>
+          <textarea id="mpcMergedRows" class="small-textarea" spellcheck="false">[]</textarea>
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label for="mpcSteps">Control steps</label>
+            <input id="mpcSteps" type="number" min="1" max="240" value="12" />
+          </div>
+          <div class="field">
+            <label for="mpcHorizon">Prediction horizon</label>
+            <input id="mpcHorizon" type="number" min="1" max="48" value="6" />
+          </div>
+          <div class="field">
+            <label for="mpcCandidates">Candidate action sequences</label>
+            <input id="mpcCandidates" type="number" min="1" max="4000" value="80" />
+          </div>
+          <div class="field">
+            <label for="mpcTargets">Target setpoints (JSON)</label>
+            <textarea id="mpcTargets" class="small-textarea" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="mpcTargetWeights">Target weights (JSON)</label>
+            <textarea id="mpcTargetWeights" class="small-textarea" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="mpcControlWeights">Control weights (JSON)</label>
+            <textarea id="mpcControlWeights" class="small-textarea" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="mpcBounds">Control bounds (JSON, optional)</label>
+            <textarea id="mpcBounds" class="small-textarea" spellcheck="false">{}</textarea>
+          </div>
+          <div class="field">
+            <label for="mpcWeather">Weather forecast list (JSON, optional)</label>
+            <textarea id="mpcWeather" class="small-textarea" spellcheck="false">[]</textarea>
+          </div>
+          <div class="field">
+            <label for="mpcScenarios">Scenario benchmark list (JSON)</label>
+            <textarea id="mpcScenarios" class="small-textarea" spellcheck="false">[
+  {"name":"Balanced","target_setpoints":{"Tair":21.0,"CO2air":500.0,"HumDef":6.0}},
+  {"name":"EnergySaver","target_setpoints":{"Tair":20.0,"CO2air":470.0},"control_weights":{"_magnitude":0.08}},
+  {"name":"HighGrowth","target_setpoints":{"Tair":22.5,"CO2air":650.0},"control_weights":{"_magnitude":0.01}}
+]</textarea>
+          </div>
+          <div class="actions">
+            <button type="button" class="secondary" id="mpcDefaultsBtn">Load MPC defaults</button>
+            <button type="button" id="mpcRunBtn">Run MPC simulation</button>
+            <button type="button" class="secondary" id="mpcScenarioBtn">Run scenario benchmark</button>
+          </div>
+          <div id="mpcStatus" class="status">Idle</div>
+        </div>
+        <div>
+          <h3 style="margin-top:0;">MPC Output</h3>
+          <pre id="mpcOutput">No simulation yet.</pre>
+          <canvas id="mpcCanvas" height="220" style="margin-top:10px;"></canvas>
+          <pre id="mpcScenarioOutput" style="margin-top:10px;">No scenario benchmark yet.</pre>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="explainTab" class="tab-panel">
+    <div class="card" style="margin-top:8px;">
+      <h3>4) Visualization & Explainability</h3>
+      <p>Visualize sensor trends and inspect model interpretability with attention heatmaps or SHAP-like attributions.</p>
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label for="vizFeatures">Trend features (comma separated)</label>
+            <input id="vizFeatures" type="text" value="Air Temperature, Air Carbon Dioxide, Humidity Deficit, Assimilation Lighting Level, Wind-Side Vent Position, Outdoor Temperature, Global Irradiance" />
+          </div>
+          <div class="actions">
+            <button type="button" id="renderTrendBtn" class="secondary">Render trends</button>
+          </div>
+          <canvas id="trendCanvas" height="240"></canvas>
+          <div class="mini-grid" id="trendStats" style="margin-top:10px;"></div>
+        </div>
+        <div>
+          <div class="field">
+            <label for="explainMethod">Explainability method</label>
+            <select id="explainMethod">
+              <option value="gradient_attention">Attention Heatmap (Gradient)</option>
+              <option value="shap_approx">SHAP-like (Perturbation)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="explainTargetFeature">Target feature</label>
+            <select id="explainTargetFeature"></select>
+          </div>
+          <div class="field">
+            <label for="explainTopK">Top features to show</label>
+            <input id="explainTopK" type="number" min="1" max="21" value="8" />
+          </div>
+          <div class="actions">
+            <button type="button" id="runExplainBtn">Run explainability</button>
+          </div>
+          <div id="explainStatus" class="status">Idle</div>
+          <canvas id="heatmapCanvas" height="240" style="margin-top:10px;"></canvas>
+          <pre id="explainSummary" style="margin-top:10px;">No explainability run yet.</pre>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="codeTab" class="tab-panel">
+    <div class="card" style="margin-top:8px;">
+      <h3>5) Run Python Code From Browser</h3>
+      <p>Select any project <code>.py</code> file, review it, then run it on the server.</p>
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label for="scriptSelect">Python file</label>
+            <select id="scriptSelect"></select>
+          </div>
+          <div class="field">
+            <label for="scriptArgs">Arguments (space separated)</label>
+            <input id="scriptArgs" type="text" placeholder="--help" />
+          </div>
+          <div class="actions">
+            <button type="button" id="refreshScriptsBtn" class="secondary">Refresh files</button>
+            <button type="button" id="runScriptBtn">Run selected script</button>
+          </div>
+          <div id="scriptStatus" class="status">Idle</div>
+        </div>
+        <div>
+          <h3 style="margin-top:0;">Source Preview</h3>
+          <pre id="scriptSource">Select a file to preview source...</pre>
+        </div>
+      </div>
+      <h3 style="margin-top:14px;">Execution Output</h3>
+      <pre id="scriptOutput">No run yet.</pre>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    const FEATURE_LABELS = {
+      CO2air: "Air Carbon Dioxide",
+      Cum_irr: "Cumulative Irrigation",
+      Tair: "Air Temperature",
+      Tot_PAR: "Total Photosynthetically Active Radiation",
+      Ventwind: "Wind-Side Vent Position",
+      AssimLight: "Assimilation Lighting Level",
+      VentLee: "Leeward Vent Position",
+      HumDef: "Humidity Deficit",
+      co2_dos: "Carbon Dioxide Dosing Rate",
+      PipeGrow: "Heating Pipe Growth Circuit",
+      EnScr: "Energy Screen Position",
+      BlackScr: "Blackout Screen Position",
+      Windsp: "Wind Speed",
+      Winddir: "Wind Direction",
+      Tout: "Outdoor Temperature",
+      Rhout: "Outdoor Relative Humidity",
+      AbsHumOut: "Outdoor Absolute Humidity",
+      PARout: "Outdoor Photosynthetically Active Radiation",
+      Iglob: "Global Irradiance",
+      Pyrgeo: "Pyrgeometer Radiation",
+      RadSum: "Radiation Sum",
+    };
+
+    function friendlyFeatureName(key) {
+      return FEATURE_LABELS[key] || key;
+    }
+
+    function resolveFeatureKey(value) {
+      if (FEATURE_LABELS[value]) return value;
+      const normalized = String(value || "").trim().toLowerCase();
+      const direct = Object.keys(FEATURE_LABELS).find((k) => k.toLowerCase() === normalized);
+      if (direct) return direct;
+      const byLabel = Object.entries(FEATURE_LABELS).find(([, label]) => label.toLowerCase() === normalized);
+      return byLabel ? byLabel[0] : value;
+    }
+
+    const payloadEl = document.getElementById("payload");
+    const responseEl = document.getElementById("response");
+    const statusEl = document.getElementById("status");
+    const usePipelinePredictEl = document.getElementById("usePipelinePredict");
+    const predictPipelinePanelEl = document.getElementById("predictPipelinePanel");
+    const predictMergeStrategyEl = document.getElementById("predictMergeStrategy");
+    const predictFillMethodEl = document.getElementById("predictFillMethod");
+    const predictScalingModeEl = document.getElementById("predictScalingMode");
+    const predictGreenhouseRowsEl = document.getElementById("predictGreenhouseRows");
+    const predictWeatherRowsEl = document.getElementById("predictWeatherRows");
+    const predictMergedRowsEl = document.getElementById("predictMergedRows");
+    const usePipelineMpcEl = document.getElementById("usePipelineMpc");
+    const mpcPipelinePanelEl = document.getElementById("mpcPipelinePanel");
+    const mpcMergeStrategyEl = document.getElementById("mpcMergeStrategy");
+    const mpcFillMethodEl = document.getElementById("mpcFillMethod");
+    const mpcScalingModeEl = document.getElementById("mpcScalingMode");
+    const mpcGreenhouseRowsEl = document.getElementById("mpcGreenhouseRows");
+    const mpcWeatherRowsEl = document.getElementById("mpcWeatherRows");
+    const mpcMergedRowsEl = document.getElementById("mpcMergedRows");
+    const pipelineFromSampleBtn = document.getElementById("pipelineFromSampleBtn");
+    const scriptSelectEl = document.getElementById("scriptSelect");
+    const scriptSourceEl = document.getElementById("scriptSource");
+    const scriptOutputEl = document.getElementById("scriptOutput");
+    const scriptStatusEl = document.getElementById("scriptStatus");
+    const scriptArgsEl = document.getElementById("scriptArgs");
+    const modelShapePillEl = document.getElementById("modelShapePill");
+    const payloadHelpEl = document.getElementById("payloadHelp");
+    const mpcStepsEl = document.getElementById("mpcSteps");
+    const mpcHorizonEl = document.getElementById("mpcHorizon");
+    const mpcCandidatesEl = document.getElementById("mpcCandidates");
+    const mpcTargetsEl = document.getElementById("mpcTargets");
+    const mpcTargetWeightsEl = document.getElementById("mpcTargetWeights");
+    const mpcControlWeightsEl = document.getElementById("mpcControlWeights");
+    const mpcBoundsEl = document.getElementById("mpcBounds");
+    const mpcWeatherEl = document.getElementById("mpcWeather");
+    const mpcScenariosEl = document.getElementById("mpcScenarios");
+    const mpcStatusEl = document.getElementById("mpcStatus");
+    const mpcOutputEl = document.getElementById("mpcOutput");
+    const mpcCanvasEl = document.getElementById("mpcCanvas");
+    const mpcScenarioOutputEl = document.getElementById("mpcScenarioOutput");
+    const vizFeaturesEl = document.getElementById("vizFeatures");
+    const trendCanvasEl = document.getElementById("trendCanvas");
+    const trendStatsEl = document.getElementById("trendStats");
+    const explainMethodEl = document.getElementById("explainMethod");
+    const explainTargetFeatureEl = document.getElementById("explainTargetFeature");
+    const explainTopKEl = document.getElementById("explainTopK");
+    const explainStatusEl = document.getElementById("explainStatus");
+    const heatmapCanvasEl = document.getElementById("heatmapCanvas");
+    const explainSummaryEl = document.getElementById("explainSummary");
+    const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
+    const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+    document.getElementById("sampleBtn").onclick = async () => {
+      setStatus("Loading sample...");
+      try {
+        const res = await fetch("/sample");
+        if (!res.ok) throw new Error("Could not load sample");
+        const data = await res.json();
+        payloadEl.value = JSON.stringify(data, null, 2);
+        setStatus("Sample loaded");
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    document.getElementById("clearBtn").onclick = () => {
+      payloadEl.value = "";
+      responseEl.textContent = "Waiting for a request...";
+      setStatus("Idle");
+    };
+
+    document.getElementById("sendBtn").onclick = async () => {
+      if (!payloadEl.value.trim()) {
+        setError("Add JSON first (load sample or paste your own).");
+        return;
+      }
+
+      let basePayload;
+      try {
+        basePayload = JSON.parse(payloadEl.value);
+      } catch (err) {
+        setError("Invalid JSON: " + err.message);
+        return;
+      }
+      if (!Array.isArray(basePayload.data)) {
+        setError("Payload must contain a data array.");
+        return;
+      }
+
+      let requestBody;
+      try {
+        requestBody = {
+          data: basePayload.data,
+          use_automated_pipeline: usePipelinePredictEl.checked,
+          automated_pipeline: usePipelinePredictEl.checked ? buildAutomatedPipelinePayload("predict") : {},
+        };
+      } catch (err) {
+        setError(err.message);
+        return;
+      }
+
+      setStatus("Sending...");
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+        const data = await res.json();
+        responseEl.textContent = JSON.stringify(data, null, 2);
+        setStatus(res.ok ? "Success" : "Server returned an error");
+      } catch (err) {
+        setError("Request failed: " + err.message);
+      }
+    };
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+      statusEl.classList.remove("error");
+    }
+    function setError(msg) {
+      statusEl.textContent = msg;
+      statusEl.classList.add("error");
+    }
+
+    async function refreshScripts() {
+      setScriptStatus("Loading files...");
+      try {
+        const res = await fetch("/files");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to load files");
+        scriptSelectEl.innerHTML = "";
+        data.files.forEach((path) => {
+          const opt = document.createElement("option");
+          opt.value = path;
+          opt.textContent = path;
+          scriptSelectEl.appendChild(opt);
+        });
+        if (!data.files.length) {
+          scriptSourceEl.textContent = "No Python files found.";
+          setScriptStatus("No files found");
+          return;
+        }
+        setScriptStatus("Files loaded");
+        await loadSelectedFile();
+      } catch (err) {
+        setScriptError(err.message);
+      }
+    }
+
+    async function refreshModelInfo() {
+      try {
+        const res = await fetch("/model-info");
+        if (!res.ok) return;
+        const data = await res.json();
+        const lookback = data.lookback || 20;
+        window.currentLookback = lookback;
+        const featureCount = data.feature_count || 21;
+        window.currentFeatureSchema = Array.isArray(data.features) ? data.features : [];
+        modelShapePillEl.textContent = `Expects ${lookback} × ${featureCount} numbers`;
+        payloadHelpEl.innerHTML =
+          `Body must be <code>{\"data\": [[...${featureCount} floats...], ...${lookback} rows...]}</code>. Use the sample to start.`;
+        hydrateExplainFeatureSelect();
+      } catch (_err) {
+        // Keep default static text on failure.
+      }
+    }
+
+    function hydrateExplainFeatureSelect() {
+      const schema = window.currentFeatureSchema || [];
+      explainTargetFeatureEl.innerHTML = "";
+      schema.forEach((feature) => {
+        const opt = document.createElement("option");
+        opt.value = feature;
+        opt.textContent = friendlyFeatureName(feature);
+        explainTargetFeatureEl.appendChild(opt);
+      });
+      const preferred = schema.includes("Tair") ? "Tair" : schema[0];
+      if (preferred) explainTargetFeatureEl.value = preferred;
+    }
+
+    async function loadSelectedFile() {
+      const path = scriptSelectEl.value;
+      if (!path) {
+        scriptSourceEl.textContent = "No file selected.";
+        return;
+      }
+      setScriptStatus("Loading source...");
+      try {
+        const res = await fetch(`/file?path=${encodeURIComponent(path)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to load source");
+        scriptSourceEl.textContent = data.content;
+        setScriptStatus("Ready");
+      } catch (err) {
+        setScriptError(err.message);
+      }
+    }
+
+    async function runSelectedScript() {
+      const path = scriptSelectEl.value;
+      if (!path) {
+        setScriptError("Select a script first.");
+        return;
+      }
+      const rawArgs = scriptArgsEl.value.trim();
+      const args = rawArgs ? rawArgs.split(/\s+/) : [];
+      setScriptStatus("Running...");
+      scriptOutputEl.textContent = "Executing...";
+
+      try {
+        const res = await fetch("/run-script", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path,
+            args,
+            timeout_seconds: 25,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Run failed");
+
+        const stdout = data.stdout ? `STDOUT\n${data.stdout}` : "STDOUT\n<empty>";
+        const stderr = data.stderr ? `STDERR\n${data.stderr}` : "STDERR\n<empty>";
+        scriptOutputEl.textContent =
+          `COMMAND\n${data.command.join(" ")}\n\nRETURN CODE\n${data.returncode}\n\n${stdout}\n\n${stderr}`;
+        setScriptStatus(data.ok ? "Completed" : "Completed with errors");
+      } catch (err) {
+        setScriptError(err.message);
+        scriptOutputEl.textContent = "Run failed.";
+      }
+    }
+
+    function setScriptStatus(msg) {
+      scriptStatusEl.textContent = msg;
+      scriptStatusEl.classList.remove("error");
+    }
+
+    function setScriptError(msg) {
+      scriptStatusEl.textContent = msg;
+      scriptStatusEl.classList.add("error");
+    }
+
+    function setMpcStatus(msg) {
+      mpcStatusEl.textContent = msg;
+      mpcStatusEl.classList.remove("error");
+    }
+
+    function setMpcError(msg) {
+      mpcStatusEl.textContent = msg;
+      mpcStatusEl.classList.add("error");
+    }
+
+    function parseOptionalJson(rawValue, fieldName, fallback = {}) {
+      const trimmed = rawValue.trim();
+      if (!trimmed) {
+        return fallback;
+      }
+      try {
+        return JSON.parse(trimmed);
+      } catch (err) {
+        throw new Error(`${fieldName} is not valid JSON: ${err.message}`);
+      }
+    }
+
+    function buildAutomatedPipelinePayload(mode) {
+      const isPredict = mode === "predict";
+      const mergeEl = isPredict ? predictMergeStrategyEl : mpcMergeStrategyEl;
+      const fillEl = isPredict ? predictFillMethodEl : mpcFillMethodEl;
+      const scalingEl = isPredict ? predictScalingModeEl : mpcScalingModeEl;
+      const greenhouseEl = isPredict ? predictGreenhouseRowsEl : mpcGreenhouseRowsEl;
+      const weatherEl = isPredict ? predictWeatherRowsEl : mpcWeatherRowsEl;
+      const mergedEl = isPredict ? predictMergedRowsEl : mpcMergedRowsEl;
+
+      const greenhouseRows = parseOptionalJson(greenhouseEl.value, "Greenhouse rows", []);
+      const weatherRows = parseOptionalJson(weatherEl.value, "Weather rows", []);
+      const mergedRows = parseOptionalJson(mergedEl.value, "Merged rows", []);
+
+      if (!Array.isArray(greenhouseRows) || !Array.isArray(weatherRows) || !Array.isArray(mergedRows)) {
+        throw new Error("Greenhouse, weather, and merged rows must be JSON arrays.");
+      }
+
+      return {
+        lookback: Number(window.currentLookback || 20),
+        merge_strategy: mergeEl.value,
+        fill_method: fillEl.value,
+        scaling_mode: scalingEl.value,
+        greenhouse_rows: greenhouseRows,
+        weather_rows: weatherRows,
+        merged_rows: mergedRows,
+      };
+    }
+
+    function setPipelinePanelVisibility() {
+      predictPipelinePanelEl.style.display = usePipelinePredictEl.checked ? "block" : "none";
+      mpcPipelinePanelEl.style.display = usePipelineMpcEl.checked ? "block" : "none";
+    }
+
+    function buildPipelineSampleFromCurrentPayload() {
+      if (!payloadEl.value.trim()) {
+        setError("Load sample payload first.");
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(payloadEl.value);
+        if (!Array.isArray(parsed.data)) {
+          throw new Error("Payload must include data array.");
+        }
+        const rows = parsed.data.map((arr, idx) => ({
+          "%time": `t_${String(idx + 1).padStart(3, "0")}`,
+          CO2air: arr[0], Cum_irr: arr[1], Tair: arr[2], Tot_PAR: arr[3], Ventwind: arr[4],
+          AssimLight: arr[5], VentLee: arr[6], HumDef: arr[7], co2_dos: arr[8], PipeGrow: arr[9],
+          EnScr: arr[10], BlackScr: arr[11], Windsp: arr[12], Winddir: arr[13], Tout: arr[14],
+          Rhout: arr[15], AbsHumOut: arr[16], PARout: arr[17], Iglob: arr[18], Pyrgeo: arr[19], RadSum: arr[20],
+        }));
+        const rowsText = JSON.stringify(rows, null, 2);
+        predictMergedRowsEl.value = rowsText;
+        mpcMergedRowsEl.value = rowsText;
+        predictGreenhouseRowsEl.value = "[]";
+        predictWeatherRowsEl.value = "[]";
+        mpcGreenhouseRowsEl.value = "[]";
+        mpcWeatherRowsEl.value = "[]";
+        setStatus("Pipeline sample generated from loaded payload.");
+      } catch (err) {
+        setError("Could not build pipeline sample: " + err.message);
+      }
+    }
+
+    async function loadPipelineDefaults() {
+      try {
+        const res = await fetch("/pipeline/default-config");
+        const data = await res.json();
+        if (!res.ok) return;
+        window.currentLookback = data.lookback || 20;
+        predictMergeStrategyEl.value = data.merge_strategy || "inner";
+        predictFillMethodEl.value = data.fill_method || "interpolate";
+        predictScalingModeEl.value = data.scaling_mode || "trained";
+        mpcMergeStrategyEl.value = data.merge_strategy || "inner";
+        mpcFillMethodEl.value = data.fill_method || "interpolate";
+        mpcScalingModeEl.value = data.scaling_mode || "trained";
+      } catch (_err) {
+        // Non-blocking fallback.
+      }
+    }
+
+    function currentWindowFromPayload() {
+      if (!payloadEl.value.trim()) {
+        throw new Error("Load sample payload first.");
+      }
+      const parsed = JSON.parse(payloadEl.value);
+      if (!Array.isArray(parsed.data)) {
+        throw new Error("Payload must include data array.");
+      }
+      return parsed.data;
+    }
+
+    function renderTrendChart() {
+      let data;
+      try {
+        data = currentWindowFromPayload();
+      } catch (err) {
+        setError(err.message);
+        return;
+      }
+
+      const schema = window.currentFeatureSchema || [];
+      const selectedFeatures = vizFeaturesEl.value
+        .split(",")
+        .map((s) => s.trim())
+        .map((s) => resolveFeatureKey(s))
+        .filter((s) => s.length > 0 && schema.includes(s));
+
+      if (!selectedFeatures.length) {
+        setError("No valid features selected for trend chart.");
+        return;
+      }
+
+      const ctx = trendCanvasEl.getContext("2d");
+      const w = trendCanvasEl.width;
+      const h = trendCanvasEl.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0b1222";
+      ctx.fillRect(0, 0, w, h);
+
+      const palette = ["#38bdf8", "#22c55e", "#f97316", "#eab308", "#a78bfa", "#fb7185", "#2dd4bf"];
+      const padding = 24;
+      const plotW = w - padding * 2;
+      const plotH = h - padding * 2;
+      const n = data.length;
+
+      let globalMin = Infinity;
+      let globalMax = -Infinity;
+      const seriesMap = {};
+      selectedFeatures.forEach((feature) => {
+        const idx = schema.indexOf(feature);
+        const series = data.map((row) => Number(row[idx]));
+        seriesMap[feature] = series;
+        series.forEach((v) => {
+          globalMin = Math.min(globalMin, v);
+          globalMax = Math.max(globalMax, v);
+        });
+      });
+      if (!Number.isFinite(globalMin) || !Number.isFinite(globalMax) || globalMax === globalMin) {
+        globalMin = 0;
+        globalMax = 1;
+      }
+
+      ctx.strokeStyle = "rgba(148,163,184,0.25)";
+      ctx.strokeRect(padding, padding, plotW, plotH);
+
+      selectedFeatures.forEach((feature, idx) => {
+        const series = seriesMap[feature];
+        ctx.beginPath();
+        ctx.strokeStyle = palette[idx % palette.length];
+        ctx.lineWidth = 2;
+        series.forEach((v, i) => {
+          const x = padding + (i / Math.max(n - 1, 1)) * plotW;
+          const y = padding + (1 - (v - globalMin) / Math.max(globalMax - globalMin, 1e-6)) * plotH;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+
+      trendStatsEl.innerHTML = "";
+      selectedFeatures.forEach((feature, idx) => {
+        const series = seriesMap[feature];
+        const latest = series[series.length - 1];
+        const delta = latest - series[0];
+        const card = document.createElement("div");
+        card.className = "metric";
+        card.innerHTML = `<div class="label">${friendlyFeatureName(feature)}</div><div class="value" style="color:${palette[idx % palette.length]}">${latest.toFixed(2)}</div><div class="label">Change ${delta.toFixed(2)}</div>`;
+        trendStatsEl.appendChild(card);
+      });
+    }
+
+    function setExplainStatus(msg, isError = false) {
+      explainStatusEl.textContent = msg;
+      explainStatusEl.classList.toggle("error", isError);
+    }
+
+    function drawHeatmap(heatmap) {
+      const ctx = heatmapCanvasEl.getContext("2d");
+      const w = heatmapCanvasEl.width;
+      const h = heatmapCanvasEl.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0b1222";
+      ctx.fillRect(0, 0, w, h);
+
+      const rows = heatmap.length;
+      const cols = heatmap[0]?.length || 0;
+      if (!rows || !cols) return;
+
+      let maxVal = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          maxVal = Math.max(maxVal, Math.abs(Number(heatmap[r][c])));
+        }
+      }
+      maxVal = Math.max(maxVal, 1e-9);
+
+      const cellW = w / cols;
+      const cellH = h / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const norm = Math.abs(Number(heatmap[r][c])) / maxVal;
+          const red = Math.round(30 + 225 * norm);
+          const blue = Math.round(160 - 120 * norm);
+          ctx.fillStyle = `rgb(${red},80,${blue})`;
+          ctx.fillRect(c * cellW, r * cellH, cellW + 0.5, cellH + 0.5);
+        }
+      }
+    }
+
+    async function runExplainability() {
+      let basePayload;
+      try {
+        basePayload = JSON.parse(payloadEl.value);
+        if (!Array.isArray(basePayload.data)) throw new Error("Payload data array missing.");
+      } catch (err) {
+        setExplainStatus("Load or paste valid payload first.", true);
+        return;
+      }
+
+      let automatedPipeline = {};
+      try {
+        if (usePipelinePredictEl.checked) {
+          automatedPipeline = buildAutomatedPipelinePayload("predict");
+        }
+      } catch (err) {
+        setExplainStatus(err.message, true);
+        return;
+      }
+
+      const requestBody = {
+        data: basePayload.data,
+        use_automated_pipeline: usePipelinePredictEl.checked,
+        automated_pipeline: automatedPipeline,
+        method: explainMethodEl.value,
+        target_feature: explainTargetFeatureEl.value,
+        top_k_features: Number(explainTopKEl.value),
+      };
+
+      setExplainStatus("Running explainability...");
+      try {
+        const res = await fetch("/explain", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Explainability failed");
+
+        drawHeatmap(data.heatmap || []);
+        const topLines = (data.top_features || [])
+          .map((item) => `${item.rank}. ${friendlyFeatureName(item.feature)} (score: ${Number(item.score).toFixed(4)})`)
+          .join("\n");
+        explainSummaryEl.textContent =
+          `Method: ${data.method === "gradient_attention" ? "Attention Heatmap (Gradient)" : "SHAP-like (Perturbation)"}\n` +
+          `Target: ${friendlyFeatureName(data.target_feature)}\n` +
+          `Predicted value: ${Number(data.target_prediction).toFixed(3)}\n` +
+          `Automated pipeline: ${data.used_automated_pipeline ? "Enabled" : "Disabled"}\n\n` +
+          `Top contributing features:\n${topLines || "No feature ranking available."}`;
+        setExplainStatus("Explainability complete");
+      } catch (err) {
+        setExplainStatus(err.message, true);
+      }
+    }
+
+    async function loadMpcDefaults() {
+      setMpcStatus("Loading MPC defaults...");
+      try {
+        const res = await fetch("/mpc/default-config");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Could not load MPC defaults");
+        const rec = data.recommended || {};
+        if (rec.steps) mpcStepsEl.value = rec.steps;
+        if (rec.horizon) mpcHorizonEl.value = rec.horizon;
+        if (rec.candidate_sequences) mpcCandidatesEl.value = rec.candidate_sequences;
+        mpcTargetsEl.value = JSON.stringify(data.target_setpoints || {}, null, 2);
+        mpcTargetWeightsEl.value = JSON.stringify(data.target_weights || {}, null, 2);
+        mpcControlWeightsEl.value = JSON.stringify(data.control_weights || {}, null, 2);
+        setMpcStatus("MPC defaults loaded");
+      } catch (err) {
+        setMpcError(err.message);
+      }
+    }
+
+    async function loadExplainDefaults() {
+      try {
+        const res = await fetch("/explain/default-config");
+        const data = await res.json();
+        if (!res.ok) return;
+        if (Array.isArray(data.methods) && data.methods.includes(data.default_method)) {
+          explainMethodEl.value = data.default_method;
+        }
+        if (typeof data.top_k_features === "number") {
+          explainTopKEl.value = data.top_k_features;
+        }
+        if (data.default_target_feature) {
+          explainTargetFeatureEl.value = data.default_target_feature;
+        }
+      } catch (_err) {
+        // Non-blocking fallback.
+      }
+    }
+
+    async function runMpcSimulation() {
+      if (!payloadEl.value.trim()) {
+        setMpcError("Load sample payload or paste input JSON first.");
+        return;
+      }
+
+      let basePayload;
+      try {
+        basePayload = JSON.parse(payloadEl.value);
+      } catch (err) {
+        setMpcError("Base payload is invalid JSON: " + err.message);
+        return;
+      }
+
+      if (!Array.isArray(basePayload.data)) {
+        setMpcError("Base payload must have a data array.");
+        return;
+      }
+
+      let targetSetpoints;
+      let targetWeights;
+      let controlWeights;
+      let controlBounds;
+      let weatherForecast;
+      try {
+        targetSetpoints = parseOptionalJson(mpcTargetsEl.value, "Target setpoints");
+        targetWeights = parseOptionalJson(mpcTargetWeightsEl.value, "Target weights");
+        controlWeights = parseOptionalJson(mpcControlWeightsEl.value, "Control weights");
+        controlBounds = parseOptionalJson(mpcBoundsEl.value, "Control bounds");
+        weatherForecast = parseOptionalJson(mpcWeatherEl.value, "Weather forecast", []);
+      } catch (err) {
+        setMpcError(err.message);
+        return;
+      }
+
+      if (!Array.isArray(weatherForecast)) {
+        setMpcError("Weather forecast must be a JSON array.");
+        return;
+      }
+
+      const reqBody = {
+        data: basePayload.data,
+        use_automated_pipeline: usePipelineMpcEl.checked,
+        automated_pipeline: usePipelineMpcEl.checked ? buildAutomatedPipelinePayload("mpc") : {},
+        steps: Number(mpcStepsEl.value),
+        horizon: Number(mpcHorizonEl.value),
+        candidate_sequences: Number(mpcCandidatesEl.value),
+        target_setpoints: targetSetpoints,
+        target_weights: targetWeights,
+        control_weights: controlWeights,
+        control_bounds: controlBounds,
+        weather_forecast: weatherForecast,
+      };
+
+      setMpcStatus("Running MPC simulation...");
+      mpcOutputEl.textContent = "Simulating...";
+
+      try {
+        const res = await fetch("/mpc/simulate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reqBody),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "MPC simulation failed");
+
+        const summary = {
+          controller: data.controller,
+          steps: data.steps,
+          horizon: data.horizon,
+          candidate_sequences: data.candidate_sequences,
+          objective_trace: data.objective_trace,
+          energy_efficiency_score: data.energy_efficiency_score,
+          stability_index: data.stability_index,
+          final_state: data.final_state,
+          control_bounds: data.control_bounds,
+        };
+        mpcOutputEl.textContent =
+          `SUMMARY\\n${JSON.stringify(summary, null, 2)}\\n\\nFULL RESULT\\n${JSON.stringify(data, null, 2)}`;
+        drawMpcTrajectory(data);
+        setMpcStatus("MPC simulation complete");
+      } catch (err) {
+        setMpcError(err.message);
+        mpcOutputEl.textContent = "Simulation failed.";
+      }
+    }
+
+    function drawMpcTrajectory(data) {
+      const ctx = mpcCanvasEl.getContext("2d");
+      const w = mpcCanvasEl.width;
+      const h = mpcCanvasEl.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0b1222";
+      ctx.fillRect(0, 0, w, h);
+
+      const steps = Array.isArray(data.results) ? data.results : [];
+      if (!steps.length) return;
+
+      const targets = ["Tair", "CO2air", "HumDef"].filter((f) => steps[0].predicted_state?.[f] !== undefined);
+      if (!targets.length) return;
+
+      const palette = ["#38bdf8", "#22c55e", "#f97316"];
+      const series = targets.map((f) => steps.map((s) => Number(s.predicted_state[f])));
+      let minV = Math.min(...series.flat());
+      let maxV = Math.max(...series.flat());
+      if (!Number.isFinite(minV) || !Number.isFinite(maxV) || minV === maxV) { minV = 0; maxV = 1; }
+
+      const pad = 22;
+      const plotW = w - pad * 2;
+      const plotH = h - pad * 2;
+      ctx.strokeStyle = "rgba(148,163,184,0.25)";
+      ctx.strokeRect(pad, pad, plotW, plotH);
+
+      series.forEach((arr, idx) => {
+        ctx.beginPath();
+        ctx.strokeStyle = palette[idx % palette.length];
+        ctx.lineWidth = 2;
+        arr.forEach((v, i) => {
+          const x = pad + (i / Math.max(arr.length - 1, 1)) * plotW;
+          const y = pad + (1 - (v - minV) / Math.max(maxV - minV, 1e-6)) * plotH;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+    }
+
+    async function runMpcScenarioBenchmark() {
+      let basePayload;
+      try {
+        basePayload = JSON.parse(payloadEl.value);
+        if (!Array.isArray(basePayload.data)) throw new Error("Payload data array missing.");
+      } catch (err) {
+        setMpcError("Load valid payload first.");
+        return;
+      }
+
+      let scenarios;
+      try {
+        scenarios = parseOptionalJson(mpcScenariosEl.value, "Scenario list", []);
+      } catch (err) {
+        setMpcError(err.message);
+        return;
+      }
+      if (!Array.isArray(scenarios) || scenarios.length === 0) {
+        setMpcError("Scenario list must be a non-empty JSON array.");
+        return;
+      }
+
+      let automatedPipeline = {};
+      try {
+        automatedPipeline = usePipelineMpcEl.checked ? buildAutomatedPipelinePayload("mpc") : {};
+      } catch (err) {
+        setMpcError(err.message);
+        return;
+      }
+
+      setMpcStatus("Running scenario benchmark...");
+      try {
+        const res = await fetch("/mpc/evaluate-scenarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data: basePayload.data,
+            use_automated_pipeline: usePipelineMpcEl.checked,
+            automated_pipeline: automatedPipeline,
+            steps: Number(mpcStepsEl.value),
+            horizon: Number(mpcHorizonEl.value),
+            candidate_sequences: Number(mpcCandidatesEl.value),
+            scenarios,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Scenario benchmark failed");
+        mpcScenarioOutputEl.textContent = JSON.stringify(data.ranking || data, null, 2);
+        setMpcStatus("Scenario benchmark complete");
+      } catch (err) {
+        setMpcError(err.message);
+      }
+    }
+
+    function activateTab(tabId) {
+      tabButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tabTarget === tabId);
+      });
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.id === tabId);
+      });
+      if (tabId === "explainTab") {
+        setTimeout(renderTrendChart, 50);
+      }
+    }
+
+    document.getElementById("refreshScriptsBtn").onclick = refreshScripts;
+    document.getElementById("runScriptBtn").onclick = runSelectedScript;
+    document.getElementById("mpcDefaultsBtn").onclick = loadMpcDefaults;
+    document.getElementById("mpcRunBtn").onclick = runMpcSimulation;
+    document.getElementById("mpcScenarioBtn").onclick = runMpcScenarioBenchmark;
+    document.getElementById("renderTrendBtn").onclick = renderTrendChart;
+    document.getElementById("runExplainBtn").onclick = runExplainability;
+    pipelineFromSampleBtn.onclick = buildPipelineSampleFromCurrentPayload;
+    usePipelinePredictEl.onchange = setPipelinePanelVisibility;
+    usePipelineMpcEl.onchange = setPipelinePanelVisibility;
+    scriptSelectEl.onchange = loadSelectedFile;
+    tabButtons.forEach((btn) => {
+      btn.onclick = () => activateTab(btn.dataset.tabTarget);
+    });
+
+    // Auto-load sample on first visit to reduce confusion.
+    loadPipelineDefaults();
+    refreshModelInfo();
+    loadMpcDefaults();
+    loadExplainDefaults();
+    document.getElementById("sampleBtn").click();
+    setPipelinePanelVisibility();
+    setTimeout(renderTrendChart, 300);
+    refreshScripts();
+  </script>
+</body>
+</html>
