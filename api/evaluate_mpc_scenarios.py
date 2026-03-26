@@ -48,6 +48,7 @@ def main() -> None:
     args = parse_args()
     meta = json.loads((args.checkpoint_dir / "model_metadata.json").read_text(encoding="utf-8"))
     feature_names = meta.get("features", FEATURE_COLUMNS)
+    target_feature_names = meta.get("target_features", ["Tair", "CO2air", "HumDef"])
     model = keras.models.load_model(args.checkpoint_dir / "model.keras")
     feature_scaler = joblib.load(args.checkpoint_dir / "feature_scaler.save")
     target_scaler = joblib.load(args.checkpoint_dir / "target_scaler.save")
@@ -67,6 +68,7 @@ def main() -> None:
         out = run_mpc_feedback_loop(
             initial_history=base_window.copy(),
             feature_names=feature_names,
+            target_feature_names=target_feature_names,
             model=model,
             feature_scaler=feature_scaler,
             target_scaler=target_scaler,
