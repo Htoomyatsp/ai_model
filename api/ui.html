@@ -3,1549 +3,3058 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Greenhouse Predictor</title>
+  <title>Greenhouse Intelligence Console</title>
   <style>
     :root {
-      --bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      --panel: #0f172a;
-      --accent: #38bdf8;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
-      --error: #f87171;
+      --bg: #f4f1e8;
+      --bg-strong: #efe9dc;
+      --surface: rgba(255, 253, 247, 0.84);
+      --surface-strong: rgba(255, 252, 244, 0.94);
+      --surface-contrast: #17322a;
+      --surface-muted: rgba(23, 50, 42, 0.06);
+      --line: rgba(23, 50, 42, 0.12);
+      --line-strong: rgba(23, 50, 42, 0.2);
+      --text: #143129;
+      --muted: #5d746c;
+      --accent: #1f7a5d;
+      --accent-soft: rgba(31, 122, 93, 0.12);
+      --accent-strong: #0f5a43;
+      --gold: #d9a441;
+      --rose: #b66055;
+      --shadow: 0 24px 70px rgba(21, 39, 32, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Baskerville", Georgia, serif;
+      --body-font: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 10px;
+      color: var(--text);
+      font-family: var(--body-font);
+      background:
+        radial-gradient(circle at top left, rgba(198, 226, 193, 0.9), transparent 32%),
+        radial-gradient(circle at top right, rgba(250, 232, 192, 0.7), transparent 28%),
+        linear-gradient(180deg, #f6f2e8 0%, #f1ede3 52%, #e7efe8 100%);
     }
-    .shell {
-      width: min(1200px, 100%);
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 20px;
-      padding: 14px 16px 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.28;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 90%);
     }
-    header {
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    code {
+      font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    .app-shell {
+      width: min(1480px, calc(100% - 32px));
+      margin: 18px auto 36px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 34px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(250, 248, 241, 0.72)),
+        rgba(255, 255, 255, 0.5);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+      gap: 24px;
+      padding: 28px 28px 22px;
+      background:
+        linear-gradient(140deg, rgba(14, 58, 46, 0.96), rgba(21, 87, 66, 0.9)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+      color: #f7f6ef;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .masthead::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -120px;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 221, 143, 0.2), transparent 60%);
+      z-index: -1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 250, 241, 0.88);
+    }
+
+    .masthead h1 {
+      margin: 14px 0 10px;
+      font-family: var(--display-font);
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+    }
+
+    .masthead p {
+      margin: 0;
+      max-width: 64ch;
+      color: rgba(247, 246, 239, 0.78);
+      line-height: 1.65;
+      font-size: 1rem;
+    }
+
+    .masthead-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      margin-top: 22px;
     }
-    h1 { margin: 0; font-size: 24px; letter-spacing: 0.5px; }
-    .pill {
-      padding: 6px 10px;
+
+    .hero-button,
+    .ghost-button,
+    .action-button {
+      border: 0;
       border-radius: 999px;
-      background: rgba(56, 189, 248, 0.15);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--text);
-      font-size: 12px;
+      padding: 12px 16px;
+      min-height: 44px;
+      transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
     }
-    .grid {
+
+    .hero-button {
+      background: #f5e5b2;
+      color: #18362c;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(8, 29, 23, 0.18);
+    }
+
+    .ghost-button {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff7e9;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .action-button {
+      background: var(--accent);
+      color: #f9f7f0;
+      font-weight: 700;
+    }
+
+    .hero-button:hover,
+    .ghost-button:hover,
+    .action-button:hover,
+    .tab-button:hover,
+    .chip-button:hover,
+    .table-toggle:hover {
+      transform: translateY(-1px);
+    }
+
+    .masthead-aside {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      align-content: start;
+    }
+
+    .headline-card,
+    .glass-card,
+    .panel,
+    .metric-card,
+    .summary-callout {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+    }
+
+    .headline-card {
+      padding: 16px;
+      background: rgba(255, 252, 246, 0.1);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #f8f6ed;
+    }
+
+    .headline-card h2,
+    .headline-card h3,
+    .section-title,
+    .panel h2,
+    .panel h3 {
+      margin: 0;
+    }
+
+    .headline-card p {
+      margin-top: 6px;
+      color: rgba(247, 246, 239, 0.78);
+      font-size: 0.95rem;
+    }
+
+    .headline-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+      margin-top: 14px;
+    }
+
+    .headline-metric {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .headline-metric span {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(247, 246, 239, 0.72);
+    }
+
+    .headline-metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .shell-body {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 0;
+      min-height: 860px;
+    }
+
+    .tab-rail {
+      padding: 22px 18px 26px;
+      background:
+        linear-gradient(180deg, rgba(255, 253, 247, 0.92), rgba(243, 240, 232, 0.85));
+      border-right: 1px solid rgba(20, 49, 41, 0.08);
+    }
+
+    .tab-rail-inner {
+      position: sticky;
+      top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rail-label {
+      margin: 0 0 8px;
+      padding: 0 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .tab-button {
+      display: grid;
+      gap: 4px;
+      width: 100%;
+      text-align: left;
+      padding: 14px 14px 14px 16px;
+      border-radius: 18px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .tab-button strong {
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+
+    .tab-button span {
+      color: var(--muted);
+      font-size: 0.83rem;
+      line-height: 1.4;
+    }
+
+    .tab-button.active {
+      background: linear-gradient(180deg, rgba(31, 122, 93, 0.15), rgba(31, 122, 93, 0.07));
+      border-color: rgba(31, 122, 93, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+    }
+
+    .mobile-tabs {
+      display: none;
+      gap: 10px;
+      padding: 14px 18px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .mobile-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-tab-pill {
+      white-space: nowrap;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.78);
+      color: var(--text);
+    }
+
+    .mobile-tab-pill.active {
+      background: var(--surface-contrast);
+      border-color: var(--surface-contrast);
+      color: #f8f6ed;
+    }
+
+    .content-area {
+      padding: 24px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .tab-panel {
+      display: none;
+      gap: 20px;
+      animation: panelFade 220ms ease;
+    }
+
+    .tab-panel.active {
+      display: grid;
+    }
+
+    @keyframes panelFade {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel {
+      padding: 20px;
+      box-shadow: 0 18px 42px rgba(20, 49, 41, 0.05);
+    }
+
+    .section-heading {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      align-items: flex-start;
+    }
+
+    .section-heading h2 {
+      font-family: var(--display-font);
+      font-size: clamp(1.6rem, 2vw, 2.2rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .section-heading p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.6;
+    }
+
+    .section-badges,
+    .chip-row,
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge,
+    .chip,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 247, 0.72);
+      color: var(--text);
+    }
+
+    .badge.highlight,
+    .chip.highlight {
+      background: rgba(31, 122, 93, 0.12);
+      border-color: rgba(31, 122, 93, 0.16);
+    }
+
+    .badge.warn {
+      background: rgba(217, 164, 65, 0.15);
+      border-color: rgba(217, 164, 65, 0.22);
+    }
+
+    .summary-grid,
+    .three-up,
+    .two-up,
+    .predict-layout,
+    .chart-grid,
+    .dev-grid,
+    .settings-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .summary-grid {
+      grid-template-columns: 1.45fr 0.95fr;
+    }
+
+    .three-up {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .two-up,
+    .predict-layout,
+    .chart-grid,
+    .dev-grid,
+    .settings-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .executive-card {
+      padding: 24px;
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(180deg, rgba(255, 253, 248, 0.95), rgba(245, 242, 234, 0.92));
+      border: 1px solid rgba(20, 49, 41, 0.08);
+      box-shadow: 0 24px 50px rgba(20, 49, 41, 0.06);
+    }
+
+    .executive-card h3 {
+      font-family: var(--display-font);
+      font-size: clamp(1.7rem, 2vw, 2.4rem);
+      letter-spacing: -0.03em;
+    }
+
+    .executive-card p {
+      margin: 10px 0 0;
+      line-height: 1.68;
+      color: var(--muted);
+    }
+
+    .executive-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .metric-card .label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .metric-card .value {
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(1.25rem, 2vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .metric-card .meta {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .summary-callout {
+      padding: 18px;
+      background:
+        linear-gradient(180deg, rgba(255, 249, 231, 0.9), rgba(255, 253, 248, 0.86));
+      border-color: rgba(217, 164, 65, 0.18);
+    }
+
+    .summary-callout h3 {
+      font-family: var(--display-font);
+      font-size: 1.5rem;
+    }
+
+    .summary-callout p,
+    .summary-callout li,
+    .body-copy,
+    .panel p,
+    .detail-list li {
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .list,
+    .detail-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+
+    .list li + li,
+    .detail-list li + li {
       margin-top: 8px;
     }
-    .card {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 14px;
-      padding: 10px;
-      min-height: 100%;
+
+    .subtle-divider {
+      height: 1px;
+      margin: 16px 0;
+      background: linear-gradient(90deg, rgba(20, 49, 41, 0.12), rgba(20, 49, 41, 0.02));
     }
-    h3 { margin: 0 0 8px; font-size: 16px; }
-    p { margin: 0 0 10px; color: var(--muted); line-height: 1.4; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .panel-header h3 {
+      font-family: var(--display-font);
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-header p {
+      margin: 6px 0 0;
+      max-width: 62ch;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-box {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(23, 50, 42, 0.04);
+      border: 1px solid rgba(23, 50, 42, 0.08);
+    }
+
+    .stat-box span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .stat-box strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .callout-band {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .lane {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .lane.demo {
+      background: linear-gradient(180deg, rgba(31, 122, 93, 0.1), rgba(255, 255, 255, 0.56));
+    }
+
+    .lane.tech {
+      background: linear-gradient(180deg, rgba(217, 164, 65, 0.12), rgba(255, 255, 255, 0.56));
+    }
+
+    .lane h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .lane p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.58;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field,
+    .stack {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label,
+    .stack label,
+    .mini-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
     textarea {
       width: 100%;
-      min-height: 150px;
-      background: #0b1222;
-      color: #e2e8f0;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 10px;
-      padding: 12px;
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      resize: vertical;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(20, 49, 41, 0.12);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--text);
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
     }
-    .actions {
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+      font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    textarea.compact {
+      min-height: 110px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(31, 122, 93, 0.5);
+      box-shadow: 0 0 0 4px rgba(31, 122, 93, 0.08);
+    }
+
+    .toggle-group {
+      display: inline-flex;
+      padding: 5px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.65);
+      gap: 4px;
+    }
+
+    .chip-button,
+    .table-toggle {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 13px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .chip-button.active,
+    .table-toggle.active {
+      background: var(--surface-contrast);
+      color: #faf7ef;
+    }
+
+    .action-row {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 14px;
     }
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: 600;
-      cursor: pointer;
-      color: #0b1222;
-      background: var(--accent);
-      transition: transform 120ms ease, box-shadow 120ms ease;
-    }
-    button.secondary {
-      background: rgba(148, 163, 184, 0.2);
+
+    .action-row .ghost-button,
+    .action-row .hero-button {
       color: var(--text);
-      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: none;
     }
-    button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35); }
-    pre {
-      background: #0b1222;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 10px;
-      padding: 12px;
+
+    .action-row .action-button {
+      box-shadow: 0 12px 24px rgba(31, 122, 93, 0.18);
+    }
+
+    .info-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(31, 122, 93, 0.08);
+      border: 1px solid rgba(31, 122, 93, 0.12);
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .advanced {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.48);
+      overflow: hidden;
+    }
+
+    .advanced summary {
+      list-style: none;
+      padding: 14px 16px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .advanced summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced .advanced-body {
+      padding: 0 16px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .output-surface,
+    .chart-surface,
+    .code-surface {
+      padding: 16px;
+      border-radius: 18px;
+      background: #faf9f4;
+      border: 1px solid rgba(20, 49, 41, 0.08);
+    }
+
+    .code-surface pre,
+    .response-box,
+    .terminal-box {
       margin: 0;
-      color: #cbd5e1;
       white-space: pre-wrap;
       word-break: break-word;
-      font-size: 13px;
-      min-height: 90px;
+      font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+      font-size: 12.8px;
+      line-height: 1.55;
+      color: #1a352d;
     }
-    ul { padding-left: 16px; margin: 0; color: var(--muted); }
-    .status { font-size: 13px; color: var(--muted); margin-top: 8px; }
-    .status.error { color: var(--error); }
-    select, input[type="text"], input[type="number"] {
-      width: 100%;
-      background: #0b1222;
-      color: #e2e8f0;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 13px;
+
+    .response-box,
+    .terminal-box {
+      min-height: 110px;
+      max-height: 460px;
+      overflow: auto;
+      padding: 16px;
+      border-radius: 16px;
+      background: #fbfbf8;
+      border: 1px solid rgba(20, 49, 41, 0.08);
     }
-    .small-textarea {
-      min-height: 120px;
+
+    .response-box.error,
+    .status-line.error {
+      color: #8b3129;
     }
-    .field {
-      margin-bottom: 10px;
-    }
-    .field label {
-      display: block;
+
+    .status-line {
+      font-size: 0.92rem;
       color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 6px;
-    }
-    .inline {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .inline input[type="checkbox"] {
-      width: auto;
-      accent-color: var(--accent);
-    }
-    .pipeline-box {
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 10px;
-      padding: 10px;
+      min-height: 24px;
       margin-top: 10px;
-      background: rgba(11, 18, 34, 0.35);
     }
-    .mini-grid {
+
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
     }
-    .metric {
-      background: rgba(11, 18, 34, 0.55);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 10px;
-      padding: 8px 10px;
+
+    .prediction-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
     }
-    .metric .label {
-      color: var(--muted);
-      font-size: 11px;
+
+    .prediction-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(31, 122, 93, 0.08), rgba(255, 255, 255, 0.7));
+      border: 1px solid rgba(31, 122, 93, 0.14);
     }
-    .metric .value {
-      font-size: 16px;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-    canvas {
-      width: 100%;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 10px;
-      background: #0b1222;
+
+    .prediction-card span,
+    .prediction-card small {
       display: block;
     }
-    .tabs {
+
+    .prediction-card span {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .prediction-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 2rem;
+      letter-spacing: -0.05em;
+    }
+
+    .prediction-card small {
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(20, 49, 41, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(20, 49, 41, 0.08);
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      background: rgba(243, 240, 232, 0.84);
+      position: sticky;
+      top: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .rank-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(31, 122, 93, 0.12);
+      color: var(--accent-strong);
+      font-weight: 800;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr) 80px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(20, 49, 41, 0.08);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #1f7a5d, #d9a441);
+    }
+
+    .mini-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .mini-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(20, 49, 41, 0.08);
+    }
+
+    .mini-card .title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 241, 232, 0.95));
+      border: 1px solid rgba(20, 49, 41, 0.08);
+    }
+
+    .legend {
       display: flex;
       flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
     }
-    .tab-btn {
-      background: rgba(148, 163, 184, 0.2);
-      color: var(--text);
-      border: 1px solid rgba(148, 163, 184, 0.35);
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
       border-radius: 999px;
-      padding: 7px 12px;
-      font-size: 12px;
-      cursor: pointer;
     }
-    .tab-btn.active {
-      background: var(--accent);
-      color: #0b1222;
-      border-color: transparent;
-      font-weight: 700;
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
     }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-    @media (max-width: 640px) {
-      body { padding: 14px; }
-      h1 { font-size: 20px; }
-      textarea { min-height: 120px; }
+
+    .feature-tag {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.64);
+      border: 1px solid rgba(20, 49, 41, 0.08);
+      min-width: 150px;
+    }
+
+    .feature-tag span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .feature-tag strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.05rem;
+    }
+
+    .split-note {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .dual-column {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+    }
+
+    .inline-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .inline-metric {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(31, 122, 93, 0.08);
+      border: 1px solid rgba(31, 122, 93, 0.12);
+      min-width: 120px;
+    }
+
+    .inline-metric span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .inline-metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.2rem;
+      letter-spacing: -0.03em;
+    }
+
+    .script-layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .mono {
+      font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    .small {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1240px) {
+      .summary-grid,
+      .dual-column,
+      .script-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .executive-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .masthead,
+      .shell-body {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-rail {
+        display: none;
+      }
+
+      .mobile-tabs {
+        display: flex;
+      }
+
+      .content-area {
+        padding-top: 16px;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .three-up,
+      .two-up,
+      .predict-layout,
+      .chart-grid,
+      .dev-grid,
+      .settings-grid,
+      .input-grid,
+      .callout-band,
+      .metrics-grid,
+      .prediction-grid,
+      .mini-cards,
+      .stat-row {
+        grid-template-columns: 1fr;
+      }
+
+      .headline-metrics,
+      .executive-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .bar-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app-shell {
+        width: min(100%, calc(100% - 14px));
+        margin: 7px auto 18px;
+        border-radius: 24px;
+      }
+
+      .masthead,
+      .content-area {
+        padding: 18px;
+      }
+
+      .mobile-tabs {
+        padding: 12px 14px 0;
+      }
+
+      .headline-metrics,
+      .executive-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .masthead h1 {
+        max-width: 10ch;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header>
+  <div class="app-shell">
+    <header class="masthead">
       <div>
-        <div class="pill">Greenhouse Predictor</div>
-        <h1>Test the /predict API with a JSON payload</h1>
+        <div class="eyebrow">Greenhouse AI Platform</div>
+        <h1>One place to explain, compare, predict, and control.</h1>
+        <p>
+          This interface is organized for two jobs at once: a clean executive walkthrough for demos and a practical control surface for people actually running the modeling workflow.
+        </p>
+        <div class="masthead-actions">
+          <button class="hero-button" type="button" data-jump-tab="summary">Open summary</button>
+          <button class="ghost-button" type="button" data-jump-tab="predict">Run a prediction</button>
+          <button class="ghost-button" type="button" data-jump-tab="mpc">Explore MPC</button>
+        </div>
       </div>
-      <div class="pill" id="modelShapePill">Expects 20 × 21 numbers</div>
+
+      <div class="masthead-aside">
+        <section class="headline-card">
+          <h2>Executive snapshot</h2>
+          <p>The summary tab turns the system into a guided story: what it predicts, which model is deployed, why it matters, and what someone should look at first.</p>
+          <div class="headline-metrics">
+            <div class="headline-metric">
+              <span>Best architecture</span>
+              <strong id="heroBestModel">Loading</strong>
+            </div>
+            <div class="headline-metric">
+              <span>Weighted R²</span>
+              <strong id="heroBestR2">--</strong>
+            </div>
+            <div class="headline-metric">
+              <span>Targets tracked</span>
+              <strong id="heroTargetCount">3</strong>
+            </div>
+            <div class="headline-metric">
+              <span>Live tools</span>
+              <strong>8 tabs</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="headline-card">
+          <h3>Built for mixed audiences</h3>
+          <p>Demo viewers get a short narrative and clear takeaways. Technical users can drop into the deeper tabs without losing context.</p>
+        </section>
+      </div>
     </header>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab-target="predictTab">Predict</button>
-      <button class="tab-btn" data-tab-target="mpcTab">MPC Control</button>
-      <button class="tab-btn" data-tab-target="explainTab">Explainability</button>
-      <button class="tab-btn" data-tab-target="performanceTab">Model Performance</button>
-      <button class="tab-btn" data-tab-target="codeTab">Code Runner</button>
-    </div>
+    <div class="mobile-tabs" id="mobileTabs"></div>
 
-    <div id="predictTab" class="tab-panel active">
-    <div class="grid">
-      <div class="card">
-        <h3>1) Paste or load JSON</h3>
-        <p id="payloadHelp">Body must be <code>{"data": [[...21 floats...], ...20 rows...]}</code>. Use the sample to start.</p>
-        <div class="inline">
-          <input id="usePipelinePredict" type="checkbox" />
-          <label for="usePipelinePredict">Use automated data pipeline for prediction</label>
+    <div class="shell-body">
+      <aside class="tab-rail">
+        <div class="tab-rail-inner">
+          <p class="rail-label">Workspace</p>
+          <button class="tab-button active" type="button" role="tab" data-tab="summary">
+            <strong>Summary</strong>
+            <span>Fast executive overview and best-model story</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="predict">
+            <strong>Predict</strong>
+            <span>Load a sample or send a real forecast request</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="models">
+            <strong>Model Comparison</strong>
+            <span>Ranking, metrics, and deployment context</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="mpc">
+            <strong>MPC Control</strong>
+            <span>Scenario simulation and control tuning</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="explain">
+            <strong>Explainability</strong>
+            <span>Heatmaps and feature importance</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="trends">
+            <strong>Charts & Trends</strong>
+            <span>Sensor patterns and historical context</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="tools">
+            <strong>Developer Tools</strong>
+            <span>Script runner and source preview</span>
+          </button>
+          <button class="tab-button" type="button" role="tab" data-tab="settings">
+            <strong>Settings & Environment</strong>
+            <span>Schema, pipeline setup, and update tools</span>
+          </button>
         </div>
-        <div id="predictPipelinePanel" class="pipeline-box" style="display:none;">
-          <div class="field">
-            <label for="predictMergeStrategy">Merge strategy</label>
-            <select id="predictMergeStrategy">
-              <option value="inner">inner</option>
-              <option value="left">left</option>
-              <option value="right">right</option>
-              <option value="outer">outer</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="predictFillMethod">Fill method</label>
-            <select id="predictFillMethod">
-              <option value="interpolate">interpolate</option>
-              <option value="ffill">ffill</option>
-              <option value="bfill">bfill</option>
-              <option value="zero">zero</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="predictScalingMode">Scaling mode</label>
-            <select id="predictScalingMode">
-              <option value="trained">trained</option>
-              <option value="dynamic">dynamic</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="predictGreenhouseRows">Greenhouse rows JSON (optional)</label>
-            <textarea id="predictGreenhouseRows" class="small-textarea" spellcheck="false">[]</textarea>
-          </div>
-          <div class="field">
-            <label for="predictWeatherRows">Weather rows JSON (optional)</label>
-            <textarea id="predictWeatherRows" class="small-textarea" spellcheck="false">[]</textarea>
-          </div>
-          <div class="field">
-            <label for="predictMergedRows">Merged rows JSON (optional)</label>
-            <textarea id="predictMergedRows" class="small-textarea" spellcheck="false">[]</textarea>
-          </div>
-        </div>
-        <textarea id="payload" spellcheck="false" aria-label="JSON payload"></textarea>
-        <div class="actions">
-          <button type="button" id="sampleBtn">Load test window</button>          
-          <button type="button" class="secondary" id="pipelineFromSampleBtn">Use loaded dataset window</button>          <button type="button" class="secondary" id="clearBtn">Clear</button>
-        </div>
-      </div>
+      </aside>
 
-      <div class="card">
-        <h3>2) Send to API</h3>
-        <p>Calls <code>POST /predict</code> on this server and shows the prediction or any validation error.</p>
-        <div class="actions">
-          <button type="button" id="sendBtn">Send request</button>
-        </div>
-        <div id="status" class="status">Idle</div>
-        <h3>Response</h3>
-        <pre id="response">Waiting for a request...</pre>
-      </div>
-    </div>
+      <main class="content-area">
+        <section class="tab-panel active" data-panel="summary">
+          <div class="section-heading">
+            <div>
+              <h2>Summary</h2>
+              <p>The first screen answers the core questions immediately: what the project does, which models exist, which one performs best, what the outputs mean, and why the system is useful in practice.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Demo-ready</span>
+              <span class="badge">Live API-backed</span>
+              <span class="badge warn">Technical depth available in later tabs</span>
+            </div>
+          </div>
 
-    <div class="card" style="margin-top:16px;">
-      <h3>Feature order (per timestep, 21 values)</h3>
-      <ul>
-        <li>0 CO2air, 1 Cum_irr, 2 Tair, 3 Tot_PAR, 4 Ventwind, 5 AssimLight, 6 VentLee</li>
-        <li>7 HumDef, 8 co2_dos, 9 PipeGrow, 10 EnScr, 11 BlackScr, 12 Windsp, 13 Winddir</li>
-        <li>14 Tout, 15 Rhout, 16 AbsHumOut, 17 PARout, 18 Iglob, 19 Pyrgeo, 20 RadSum</li>
-      </ul>
-    </div>
-    </div>
+          <div class="summary-grid">
+            <div class="executive-card">
+              <h3 id="summaryHeadline">Greenhouse prediction and control in one product view.</h3>
+              <p id="summaryNarrative">
+                The platform forecasts climate behavior, compares multiple deep-learning models, surfaces explainability signals, and tests control strategies through MPC simulation. It is designed so someone can understand the project in under a minute, then drill into the operational tabs for real use.
+              </p>
 
-    <div id="mpcTab" class="tab-panel">
-    <div class="card" style="margin-top:8px;">
-      <h3>3) Model Predictive Control (MPC) Simulation</h3>
-      <p>Runs a receding-horizon feedback controller that adjusts greenhouse actuators and rolls the model forward.</p>
-      <div class="inline">
-        <input id="usePipelineMpc" type="checkbox" />
-        <label for="usePipelineMpc">Use automated data pipeline for MPC initial window</label>
-      </div>
-      <div id="mpcPipelinePanel" class="pipeline-box" style="display:none;">
-        <div class="field">
-          <label for="mpcMergeStrategy">Merge strategy</label>
-          <select id="mpcMergeStrategy">
-            <option value="inner">inner</option>
-            <option value="left">left</option>
-            <option value="right">right</option>
-            <option value="outer">outer</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="mpcFillMethod">Fill method</label>
-          <select id="mpcFillMethod">
-            <option value="interpolate">interpolate</option>
-            <option value="ffill">ffill</option>
-            <option value="bfill">bfill</option>
-            <option value="zero">zero</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="mpcScalingMode">Scaling mode</label>
-          <select id="mpcScalingMode">
-            <option value="trained">trained</option>
-            <option value="dynamic">dynamic</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="mpcGreenhouseRows">Greenhouse rows JSON (optional)</label>
-          <textarea id="mpcGreenhouseRows" class="small-textarea" spellcheck="false">[]</textarea>
-        </div>
-        <div class="field">
-          <label for="mpcWeatherRows">Weather rows JSON (optional)</label>
-          <textarea id="mpcWeatherRows" class="small-textarea" spellcheck="false">[]</textarea>
-        </div>
-        <div class="field">
-          <label for="mpcMergedRows">Merged rows JSON (optional)</label>
-          <textarea id="mpcMergedRows" class="small-textarea" spellcheck="false">[]</textarea>
-        </div>
-      </div>
-      <div class="grid">
-        <div>
-          <div class="field">
-            <label for="mpcSteps">Control steps</label>
-            <input id="mpcSteps" type="number" min="1" max="240" value="12" />
-          </div>
-          <div class="field">
-            <label for="mpcHorizon">Prediction horizon</label>
-            <input id="mpcHorizon" type="number" min="1" max="48" value="6" />
-          </div>
-          <div class="field">
-            <label for="mpcCandidates">Candidate action sequences</label>
-            <input id="mpcCandidates" type="number" min="1" max="4000" value="80" />
-          </div>
-          <div class="field">
-            <label for="mpcTargets">Target setpoints (JSON)</label>
-            <textarea id="mpcTargets" class="small-textarea" spellcheck="false"></textarea>
-          </div>
-          <div class="field">
-            <label for="mpcTargetWeights">Target weights (JSON)</label>
-            <textarea id="mpcTargetWeights" class="small-textarea" spellcheck="false"></textarea>
-          </div>
-          <div class="field">
-            <label for="mpcControlWeights">Control weights (JSON)</label>
-            <textarea id="mpcControlWeights" class="small-textarea" spellcheck="false"></textarea>
-          </div>
-          <div class="field">
-            <label for="mpcBounds">Control bounds (JSON, optional)</label>
-            <textarea id="mpcBounds" class="small-textarea" spellcheck="false">{}</textarea>
-          </div>
-          <div class="field">
-            <label for="mpcWeather">Weather forecast list (JSON, optional)</label>
-            <textarea id="mpcWeather" class="small-textarea" spellcheck="false">[]</textarea>
-          </div>
-          <div class="field">
-            <label for="mpcScenarios">Scenario benchmark list (JSON)</label>
-            <textarea id="mpcScenarios" class="small-textarea" spellcheck="false">[
-  {"name":"Balanced","target_setpoints":{"Tair":21.0,"CO2air":500.0,"HumDef":6.0}},
-  {"name":"EnergySaver","target_setpoints":{"Tair":20.0,"CO2air":470.0},"control_weights":{"_magnitude":0.08}},
-  {"name":"HighGrowth","target_setpoints":{"Tair":22.5,"CO2air":650.0},"control_weights":{"_magnitude":0.01}}
-]</textarea>
-          </div>
-          <div class="actions">
-            <button type="button" class="secondary" id="mpcDefaultsBtn">Load MPC defaults</button>
-            <button type="button" id="mpcRunBtn">Run MPC simulation</button>
-            <button type="button" class="secondary" id="mpcScenarioBtn">Run scenario benchmark</button>
-          </div>
-          <div id="mpcStatus" class="status">Idle</div>
-        </div>
-        <div>
-          <h3 style="margin-top:0;">MPC Output</h3>
-          <pre id="mpcOutput">No simulation yet.</pre>
-          <canvas id="mpcCanvas" height="220" style="margin-top:10px;"></canvas>
-          <pre id="mpcScenarioOutput" style="margin-top:10px;">No scenario benchmark yet.</pre>
-        </div>
-      </div>
-    </div>
-    </div>
+              <div class="executive-grid">
+                <div class="metric-card">
+                  <span class="label">Deployed Model</span>
+                  <span class="value" id="summaryBestModel">Loading</span>
+                  <span class="meta" id="summaryBestModelMeta">Checking live deployment details</span>
+                </div>
+                <div class="metric-card">
+                  <span class="label">Weighted R²</span>
+                  <span class="value" id="summaryR2">--</span>
+                  <span class="meta">Higher means the model explains more variance across target outputs.</span>
+                </div>
+                <div class="metric-card">
+                  <span class="label">Weighted RMSE</span>
+                  <span class="value" id="summaryRmse">--</span>
+                  <span class="meta">Lower means the forecast misses the target values by less on average.</span>
+                </div>
+                <div class="metric-card">
+                  <span class="label">Prediction Outputs</span>
+                  <span class="value" id="summaryTargets">3 targets</span>
+                  <span class="meta">Air temperature, CO2, and humidity deficit are surfaced as decision-ready outputs.</span>
+                </div>
+              </div>
 
-    <div id="explainTab" class="tab-panel">
-      <div class="card" style="margin-top:8px;">
-        <h3>4) Visualization & Explainability</h3>
-        <p>Visualize sensor trends and inspect model interpretability with attention heatmaps or SHAP-like attributions.</p>
-        <div class="grid">
-          <div>
-            <div class="field">
-              <label for="vizFeatures">Trend features (comma separated)</label>
-              <input id="vizFeatures" type="text" value="Air Temperature, Air Carbon Dioxide, Humidity Deficit, Assimilation Lighting Level, Wind-Side Vent Position, Outdoor Temperature, Global Irradiance" />
+              <div class="callout-band">
+                <div class="lane demo">
+                  <h4>Best path for a demo</h4>
+                  <p>Start here, open Model Comparison to show why the deployed model won, then use Predict or MPC for a concrete example.</p>
+                </div>
+                <div class="lane tech">
+                  <h4>Best path for technical users</h4>
+                  <p>Jump from Predict into Explainability, then inspect Scripts and Settings to see the pipeline assumptions and runtime tools.</p>
+                </div>
+              </div>
             </div>
 
-            <div class="actions">
-              <button type="button" id="renderTrendBtn" class="secondary">Render trends</button>
-              <button type="button" id="resetTrendZoomBtn" class="secondary">Reset axis</button>
+            <div class="summary-callout">
+              <h3>What makes this useful</h3>
+              <p>This is not just a scoring dashboard. It helps answer operational questions: what will happen next, which model should we trust, which features drove the forecast, and which control strategy looks most efficient.</p>
+              <ul class="list" id="summaryUsefulnessList">
+                <li>Forecast target greenhouse conditions from recent climate and weather history.</li>
+                <li>Compare architectures using ranked metrics instead of vague model claims.</li>
+                <li>Simulate control actions before applying them in a live environment.</li>
+                <li>Expose explainability views for stakeholder trust and debugging.</li>
+              </ul>
+              <div class="subtle-divider"></div>
+              <div class="quick-links">
+                <button class="ghost-button" type="button" data-jump-tab="models">See why the best model wins</button>
+                <button class="ghost-button" type="button" data-jump-tab="predict">Test a live prediction</button>
+              </div>
             </div>
-
-            <canvas id="trendCanvas" height="240"></canvas>
-            <div class="mini-grid" id="trendStats" style="margin-top:10px;"></div>
           </div>
 
-          <div>
-            <div class="field">
-              <label for="explainMethod">Explainability method</label>
-              <select id="explainMethod">
-                <option value="gradient_attention">Attention Heatmap (Gradient)</option>
-                <option value="shap_approx">SHAP-like (Perturbation)</option>
-              </select>
+          <div class="two-up">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Current model lineup</h3>
+                  <p>All trained architectures are visible in one place so someone can understand the modeling strategy without reading code or training logs.</p>
+                </div>
+                <span class="status-pill" id="summaryModelCount">Loading models</span>
+              </div>
+              <div class="bar-chart" id="summaryModelBars"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>How to read the outputs</h3>
+                  <p>The summary tab should remove ambiguity. Each output is translated into plain language so a non-technical viewer knows why the number matters.</p>
+                </div>
+              </div>
+              <div class="feature-tags" id="summaryOutputTags"></div>
+            </section>
+          </div>
+
+          <div class="three-up">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Forecast workflow</h3>
+                  <p>Use a sample window or a prepared pipeline window, then inspect the prediction response and supporting metadata.</p>
+                </div>
+              </div>
+              <div class="stat-row">
+                <div class="stat-box">
+                  <span>Input window</span>
+                  <strong id="summaryLookback">--</strong>
+                </div>
+                <div class="stat-box">
+                  <span>Feature count</span>
+                  <strong id="summaryFeatureCount">--</strong>
+                </div>
+                <div class="stat-box">
+                  <span>Model type</span>
+                  <strong id="summaryModelType">--</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Control workflow</h3>
+                  <p>MPC runs a receding-horizon simulation to balance target tracking, actuator effort, and stability.</p>
+                </div>
+              </div>
+              <ul class="detail-list">
+                <li>Set target setpoints and weights for the outcomes you care about.</li>
+                <li>Simulate candidate control sequences over the prediction horizon.</li>
+                <li>Compare benchmark scenarios to see which policy looks most efficient.</li>
+              </ul>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Trust workflow</h3>
+                  <p>The explainability and trends tabs are paired intentionally: one shows attribution, the other shows the raw time-series context behind it.</p>
+                </div>
+              </div>
+              <ul class="detail-list">
+                <li>Heatmaps show which timesteps and features matter most.</li>
+                <li>Trend charts provide a sanity check on the raw sensor trajectory.</li>
+                <li>Top-feature summaries help communicate the result to non-modelers.</li>
+              </ul>
+            </section>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="predict">
+          <div class="section-heading">
+            <div>
+              <h2>Predict</h2>
+              <p>The prediction tab is structured around a simple demo path first, with advanced pipeline controls available on demand instead of overwhelming the default view.</p>
             </div>
-            <div class="field">
-              <label for="explainTargetFeature">Target feature</label>
-              <select id="explainTargetFeature"></select>
+            <div class="section-badges">
+              <span class="badge highlight">Best for live demos</span>
+              <span class="badge">Supports direct payload and pipeline modes</span>
             </div>
-            <div class="field">
-              <label for="explainTopK">Top features to show</label>
-              <input id="explainTopK" type="number" min="1" max="21" value="8" />
+          </div>
+
+          <div class="predict-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Prepare input</h3>
+                  <p>Start with a sample request or a dataset window, then edit if needed. Direct mode is the cleanest way to demo the forecasting output.</p>
+                </div>
+                <div class="toggle-group" id="predictModeToggle">
+                  <button class="chip-button active" type="button" data-mode="direct">Direct JSON</button>
+                  <button class="chip-button" type="button" data-mode="pipeline">Pipeline mode</button>
+                </div>
+              </div>
+
+              <div class="input-grid">
+                <div class="field">
+                  <label for="datasetSplit">Dataset split</label>
+                  <select id="datasetSplit">
+                    <option value="test">test</option>
+                    <option value="val">val</option>
+                    <option value="train">train</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="datasetIndex">Window index</label>
+                  <input id="datasetIndex" type="number" min="0" value="0" />
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button class="action-button" type="button" id="loadSampleBtn">Load sample payload</button>
+                <button class="ghost-button" type="button" id="loadDatasetBtn">Load dataset window</button>
+              </div>
+
+              <div id="predictDirectFields">
+                <div class="field" style="margin-top:14px;">
+                  <label for="predictPayload">Prediction payload</label>
+                  <textarea id="predictPayload" spellcheck="false"></textarea>
+                </div>
+              </div>
+
+              <div id="predictPipelineFields" class="hidden">
+                <div class="input-grid">
+                  <div class="field">
+                    <label for="predictMergeStrategy">Merge strategy</label>
+                    <select id="predictMergeStrategy"></select>
+                  </div>
+                  <div class="field">
+                    <label for="predictFillMethod">Fill method</label>
+                    <select id="predictFillMethod"></select>
+                  </div>
+                  <div class="field">
+                    <label for="predictScalingMode">Scaling mode</label>
+                    <select id="predictScalingMode"></select>
+                  </div>
+                  <div class="field">
+                    <label for="predictLookback">Lookback</label>
+                    <input id="predictLookback" type="number" min="1" value="48" />
+                  </div>
+                </div>
+
+                <details class="advanced" open>
+                  <summary>Pipeline rows</summary>
+                  <div class="advanced-body">
+                    <div class="field">
+                      <label for="predictMergedRows">Merged rows JSON</label>
+                      <textarea id="predictMergedRows" class="compact" spellcheck="false">[]</textarea>
+                    </div>
+                    <div class="field">
+                      <label for="predictGreenhouseRows">Greenhouse rows JSON</label>
+                      <textarea id="predictGreenhouseRows" class="compact" spellcheck="false">[]</textarea>
+                    </div>
+                    <div class="field">
+                      <label for="predictWeatherRows">Weather rows JSON</label>
+                      <textarea id="predictWeatherRows" class="compact" spellcheck="false">[]</textarea>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <div class="info-note" id="predictInputHint">
+                Expected input shape and feature order are loaded from the live model metadata so the UI stays aligned with the deployed model.
+              </div>
+
+              <div class="action-row">
+                <button class="action-button" type="button" id="runPredictBtn">Run prediction</button>
+                <button class="ghost-button" type="button" id="clearPredictBtn">Clear</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Prediction output</h3>
+                  <p>The response is translated into decision-ready cards first, then the raw payload is shown below for technical inspection.</p>
+                </div>
+              </div>
+
+              <div class="prediction-grid" id="predictionCards">
+                <div class="prediction-card">
+                  <span>Air temperature</span>
+                  <strong>--</strong>
+                  <small>Predicted next-step air temperature.</small>
+                </div>
+                <div class="prediction-card">
+                  <span>CO2</span>
+                  <strong>--</strong>
+                  <small>Predicted next-step CO2 concentration.</small>
+                </div>
+                <div class="prediction-card">
+                  <span>Humidity deficit</span>
+                  <strong>--</strong>
+                  <small>Predicted next-step humidity deficit.</small>
+                </div>
+              </div>
+
+              <div class="info-note" id="predictionMeaning">
+                These outputs represent the next predicted greenhouse state for the trained target variables. Use them as the starting point for control decisions, monitoring, or explainability review.
+              </div>
+
+              <div class="status-line" id="predictStatus">Idle</div>
+              <div class="response-box" id="predictResponse">Prediction response will appear here.</div>
+            </section>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="models">
+          <div class="section-heading">
+            <div>
+              <h2>Model Comparison</h2>
+              <p>This tab makes the modeling story legible. It shows the ranked architectures, the deployed winner, and enough metric detail to defend the selection without dumping raw training artifacts on screen.</p>
             </div>
-            <div class="actions">
-              <button type="button" id="runExplainBtn">Run explainability</button>
+            <div class="section-badges">
+              <span class="badge highlight">Clear for presentations</span>
+              <span class="badge">Backed by training summary files</span>
             </div>
-            <div id="explainStatus" class="status">Idle</div>
-            <canvas id="heatmapCanvas" height="240" style="margin-top:10px;"></canvas>
-            <pre id="explainSummary" style="margin-top:10px;">No explainability run yet.</pre>
           </div>
-        </div>
-      </div>
-    </div>
 
+          <div class="two-up">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Architecture ranking</h3>
+                  <p>The best model should be obvious immediately. RMSE is shown as the primary ordering metric, with lower bars indicating stronger performance.</p>
+                </div>
+              </div>
+              <div class="bar-chart" id="comparisonBars"></div>
+            </section>
 
-    <div id="performanceTab" class="tab-panel">
-      <div class="card" style="margin-top:8px;">
-        <h3>5) Model Performance</h3>
-        <p>Displays the current deployed model and architecture comparison from the latest training run.</p>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Winning model summary</h3>
+                  <p>Use this block when someone asks, “Which model actually ships, and why?”</p>
+                </div>
+              </div>
+              <div class="mini-cards">
+                <div class="mini-card">
+                  <div class="title">Deployed architecture</div>
+                  <strong id="modelsBestName">--</strong>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Weighted RMSE</div>
+                  <strong id="modelsBestRmse">--</strong>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Weighted R²</div>
+                  <strong id="modelsBestR2">--</strong>
+                </div>
+              </div>
+              <div class="info-note" id="modelsSummaryNote">
+                The current best model reduces forecast error while keeping interpretability and multi-signal context available through the rest of the interface.
+              </div>
+            </section>
+          </div>
 
-        <div class="mini-grid" style="margin-bottom:14px;">
-          <div class="metric">
-            <div class="label">Best Model</div>
-            <div class="value" id="perfBestModel">-</div>
-          </div>
-          <div class="metric">
-            <div class="label">RMSE</div>
-            <div class="value" id="perfRmse">-</div>
-          </div>
-          <div class="metric">
-            <div class="label">MAE</div>
-            <div class="value" id="perfMae">-</div>
-          </div>
-          <div class="metric">
-            <div class="label">MAPE</div>
-            <div class="value" id="perfMape">-</div>
-          </div>
-          <div class="metric">
-            <div class="label">R²</div>
-            <div class="value" id="perfR2">-</div>
-          </div>
-          <div class="metric">
-            <div class="label">Lookback</div>
-            <div class="value" id="perfLookback">-</div>
-          </div>
-        </div>
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Detailed comparison table</h3>
+                <p>Metrics are shown in a compact table so technical viewers can verify performance without leaving the UI.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Architecture</th>
+                    <th>RMSE</th>
+                    <th>MAE</th>
+                    <th>SMAPE / MAPE</th>
+                    <th>R²</th>
+                  </tr>
+                </thead>
+                <tbody id="comparisonTableBody">
+                  <tr><td colspan="6">Loading model comparison...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-        <h3>Architecture Ranking</h3>
-        <pre id="perfSummary">Loading model performance...</pre>
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Per-target deployed metrics</h3>
+                <p>The main targets are surfaced individually so the model does not feel like an opaque aggregate score.</p>
+              </div>
+            </div>
+            <div class="feature-tags" id="perTargetMetrics"></div>
+          </section>
+        </section>
 
-        <div style="overflow-x:auto; margin-top:10px;">
-          <table style="width:100%; border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">Rank</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">Architecture</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">RMSE</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">MAE</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">MAPE</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid rgba(148,163,184,0.3);">R²</th>
-              </tr>
-            </thead>
-            <tbody id="perfTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+        <section class="tab-panel" data-panel="mpc">
+          <div class="section-heading">
+            <div>
+              <h2>MPC Control</h2>
+              <p>The control tab focuses on practical simulation: load an initial window, run MPC, inspect efficiency and stability, then compare scenarios without overloading the screen with every possible knob at once.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Operational view</span>
+              <span class="badge">Scenario benchmark included</span>
+            </div>
+          </div>
 
+          <div class="two-up">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Simulation setup</h3>
+                  <p>Use defaults for a clean demo, then open advanced inputs when you need deeper control.</p>
+                </div>
+              </div>
 
-    <div id="codeTab" class="tab-panel">
-    <div class="card" style="margin-top:8px;">
-      <h3>6) Run Python Code From Browser</h3>
-      <p>Select any project <code>.py</code> file, review it, then run it on the server.</p>
-      <div class="grid">
-        <div>
-          <div class="field">
-            <label for="scriptSelect">Python file</label>
-            <select id="scriptSelect"></select>
+              <div class="input-grid">
+                <div class="field">
+                  <label for="mpcSteps">Control steps</label>
+                  <input id="mpcSteps" type="number" min="1" max="240" value="12" />
+                </div>
+                <div class="field">
+                  <label for="mpcHorizon">Prediction horizon</label>
+                  <input id="mpcHorizon" type="number" min="1" max="48" value="6" />
+                </div>
+                <div class="field">
+                  <label for="mpcCandidates">Candidate sequences</label>
+                  <input id="mpcCandidates" type="number" min="1" max="4000" value="80" />
+                </div>
+                <div class="field">
+                  <label for="mpcSeed">Random seed</label>
+                  <input id="mpcSeed" type="number" value="42" />
+                </div>
+              </div>
+
+              <details class="advanced" open>
+                <summary>Target and control JSON</summary>
+                <div class="advanced-body">
+                  <div class="field">
+                    <label for="mpcTargets">Target setpoints</label>
+                    <textarea id="mpcTargets" class="compact" spellcheck="false"></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="mpcTargetWeights">Target weights</label>
+                    <textarea id="mpcTargetWeights" class="compact" spellcheck="false"></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="mpcControlWeights">Control weights</label>
+                    <textarea id="mpcControlWeights" class="compact" spellcheck="false"></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="mpcBounds">Control bounds</label>
+                    <textarea id="mpcBounds" class="compact" spellcheck="false">{}</textarea>
+                  </div>
+                  <div class="field">
+                    <label for="mpcWeather">Weather forecast</label>
+                    <textarea id="mpcWeather" class="compact" spellcheck="false">[]</textarea>
+                  </div>
+                </div>
+              </details>
+
+              <details class="advanced">
+                <summary>Initial window input</summary>
+                <div class="advanced-body">
+                  <div class="field">
+                    <label for="mpcInitialData">Window data</label>
+                    <textarea id="mpcInitialData" spellcheck="false"></textarea>
+                  </div>
+                  <div class="field">
+                    <label for="mpcScenarioTextarea">Scenario benchmark list</label>
+                    <textarea id="mpcScenarioTextarea" spellcheck="false"></textarea>
+                  </div>
+                </div>
+              </details>
+
+              <div class="action-row">
+                <button class="action-button" type="button" id="loadMpcDefaultsBtn">Load defaults</button>
+                <button class="ghost-button" type="button" id="useDatasetForMpcBtn">Use dataset window</button>
+                <button class="action-button" type="button" id="runMpcBtn">Run MPC simulation</button>
+                <button class="ghost-button" type="button" id="runScenarioBtn">Run scenario benchmark</button>
+              </div>
+
+              <div class="status-line" id="mpcStatus">Idle</div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>MPC outputs</h3>
+                  <p>High-level control metrics are shown first, then the trajectory chart and raw response are available below.</p>
+                </div>
+              </div>
+              <div class="mini-cards">
+                <div class="mini-card">
+                  <div class="title">Energy efficiency</div>
+                  <strong id="mpcEnergy">--</strong>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Stability index</div>
+                  <strong id="mpcStability">--</strong>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Final objective</div>
+                  <strong id="mpcObjective">--</strong>
+                </div>
+              </div>
+              <div class="chart-surface" style="margin-top:14px;">
+                <canvas id="mpcCanvas" width="920" height="320"></canvas>
+                <div class="legend" id="mpcLegend"></div>
+              </div>
+              <div class="response-box" id="mpcResponse" style="margin-top:14px;">MPC response will appear here.</div>
+            </section>
           </div>
-          <div class="field">
-            <label for="scriptArgs">Arguments (space separated)</label>
-            <input id="scriptArgs" type="text" placeholder="--help" />
+        </section>
+
+        <section class="tab-panel" data-panel="explain">
+          <div class="section-heading">
+            <div>
+              <h2>Explainability</h2>
+              <p>The explainability view is designed to be readable for non-ML viewers: top contributing features are summarized in plain language first, while the heatmap and raw payload remain available for deeper inspection.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Trust-building view</span>
+              <span class="badge">Heatmap and ranked contributors</span>
+            </div>
           </div>
-          <div class="actions">
-            <button type="button" id="refreshScriptsBtn" class="secondary">Refresh files</button>
-            <button type="button" id="runScriptBtn">Run selected script</button>
+
+          <div class="two-up">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Run explanation</h3>
+                  <p>Choose a target variable and attribution method, then explain the current sample or dataset window.</p>
+                </div>
+              </div>
+
+              <div class="input-grid">
+                <div class="field">
+                  <label for="explainMethod">Method</label>
+                  <select id="explainMethod"></select>
+                </div>
+                <div class="field">
+                  <label for="explainTarget">Target output</label>
+                  <select id="explainTarget"></select>
+                </div>
+                <div class="field">
+                  <label for="explainTopK">Top features</label>
+                  <input id="explainTopK" type="number" min="1" max="21" value="8" />
+                </div>
+              </div>
+
+              <details class="advanced">
+                <summary>Explanation input window</summary>
+                <div class="advanced-body">
+                  <div class="field">
+                    <label for="explainInputData">Window data</label>
+                    <textarea id="explainInputData" spellcheck="false"></textarea>
+                  </div>
+                </div>
+              </details>
+
+              <div class="action-row">
+                <button class="ghost-button" type="button" id="useDatasetForExplainBtn">Use dataset window</button>
+                <button class="action-button" type="button" id="runExplainBtn">Run explainability</button>
+              </div>
+
+              <div class="status-line" id="explainStatus">Idle</div>
+              <div class="feature-tags" id="topFeatures"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Heatmap</h3>
+                  <p>Brighter cells indicate stronger influence on the selected target prediction across timesteps and input features.</p>
+                </div>
+              </div>
+              <div class="chart-surface">
+                <canvas id="heatmapCanvas" width="920" height="320"></canvas>
+              </div>
+              <div class="response-box" id="explainResponse" style="margin-top:14px;">Explainability output will appear here.</div>
+            </section>
           </div>
-          <div id="scriptStatus" class="status">Idle</div>
-        </div>
-        <div>
-          <h3 style="margin-top:0;">Source Preview</h3>
-          <pre id="scriptSource">Select a file to preview source...</pre>
-        </div>
-      </div>
-      <h3 style="margin-top:14px;">Execution Output</h3>
-      <pre id="scriptOutput">No run yet.</pre>
-    </div>
+        </section>
+
+        <section class="tab-panel" data-panel="trends">
+          <div class="section-heading">
+            <div>
+              <h2>Charts & Trends</h2>
+              <p>This tab gives context before prediction or explanation. It shows the raw greenhouse trajectory so users can see whether the recent window looks stable, unusual, or operationally interesting.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Context before explanation</span>
+              <span class="badge">Mobile-friendly chart layout</span>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Trend controls</h3>
+                  <p>Choose a dataset split and the features you want to compare. The defaults are selected to tell a coherent story across climate state, control signals, and weather context.</p>
+                </div>
+              </div>
+
+              <div class="input-grid">
+                <div class="field">
+                  <label for="trendSplit">Dataset split</label>
+                  <select id="trendSplit">
+                    <option value="test">test</option>
+                    <option value="val">val</option>
+                    <option value="train">train</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="trendIndex">Window index</label>
+                  <input id="trendIndex" type="number" min="0" value="0" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="trendFeatures">Feature list</label>
+                <input id="trendFeatures" type="text" value="Tair, CO2air, HumDef, AssimLight, Ventwind, Tout, Iglob" />
+              </div>
+
+              <div class="action-row">
+                <button class="action-button" type="button" id="renderTrendsBtn">Render trends</button>
+                <button class="ghost-button" type="button" id="useCurrentWindowBtn">Use current loaded window</button>
+              </div>
+
+              <div class="split-note" id="trendMetaNote">Trend metadata will appear here.</div>
+              <div class="feature-tags" id="trendStats"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Trend chart</h3>
+                  <p>Values are normalized for comparison so the visual emphasizes pattern changes and timing instead of raw unit scale differences.</p>
+                </div>
+              </div>
+              <div class="chart-surface">
+                <canvas id="trendCanvas" width="920" height="340"></canvas>
+                <div class="legend" id="trendLegend"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="tools">
+          <div class="section-heading">
+            <div>
+              <h2>Scripts & Developer Tools</h2>
+              <p>Technical operations are intentionally separated from the presentation tabs. This keeps the product view clean while still giving developers a built-in script launcher and source preview.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Technical lane</span>
+              <span class="badge">Safe path browsing for Python files</span>
+            </div>
+          </div>
+
+          <div class="script-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Run a project script</h3>
+                  <p>Select any Python file in the project, review its source, then execute it with optional arguments.</p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="scriptSelect">Python file</label>
+                <select id="scriptSelect"></select>
+              </div>
+              <div class="field">
+                <label for="scriptArgs">Arguments</label>
+                <input id="scriptArgs" type="text" placeholder="--help" />
+              </div>
+              <div class="field">
+                <label for="scriptTimeout">Timeout seconds</label>
+                <input id="scriptTimeout" type="number" min="1" max="120" value="25" />
+              </div>
+              <div class="action-row">
+                <button class="ghost-button" type="button" id="refreshScriptsBtn">Refresh files</button>
+                <button class="action-button" type="button" id="runScriptBtn">Run script</button>
+              </div>
+              <div class="status-line" id="scriptStatus">Idle</div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Source preview</h3>
+                  <p>Preview keeps the tooling tab self-contained so developers can inspect what they are about to run without leaving the page.</p>
+                </div>
+              </div>
+              <div class="terminal-box" id="scriptSource">Select a Python file to preview its source.</div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Execution output</h3>
+                <p>Script output is captured below, including stderr and return code context.</p>
+              </div>
+            </div>
+            <div class="terminal-box" id="scriptOutput">No script has been run yet.</div>
+          </section>
+        </section>
+
+        <section class="tab-panel" data-panel="settings">
+          <div class="section-heading">
+            <div>
+              <h2>Settings & Environment</h2>
+              <p>Advanced environment details live here so the summary stays focused. This tab surfaces feature schema, pipeline defaults, and continuous update tools for technical users.</p>
+            </div>
+            <div class="section-badges">
+              <span class="badge highlight">Configuration view</span>
+              <span class="badge">Environment metadata and update tools</span>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Model environment</h3>
+                  <p>These values come from the live model metadata and show what the deployed system expects.</p>
+                </div>
+              </div>
+              <div class="feature-tags" id="environmentTags"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Pipeline defaults</h3>
+                  <p>Useful when someone wants to understand how windows are prepared before inference.</p>
+                </div>
+              </div>
+              <div class="response-box" id="pipelineInfo">Loading pipeline defaults...</div>
+            </section>
+          </div>
+
+          <div class="settings-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Feature schema</h3>
+                  <p>Climate and weather inputs are split explicitly so the multi-input model structure is understandable from the interface.</p>
+                </div>
+              </div>
+              <div class="feature-tags" id="featureSchema"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Continuous update</h3>
+                  <p>Use this when you want to ingest new rows and fine-tune the deployed model incrementally.</p>
+                </div>
+              </div>
+              <div class="input-grid">
+                <div class="field">
+                  <label for="updateRowsLimit">New rows limit</label>
+                  <input id="updateRowsLimit" type="number" min="200" max="50000" value="4000" />
+                </div>
+                <div class="field">
+                  <label for="updateEpochs">Fine-tune epochs</label>
+                  <input id="updateEpochs" type="number" min="1" max="20" value="2" />
+                </div>
+                <div class="field">
+                  <label for="updateBatchSize">Batch size</label>
+                  <input id="updateBatchSize" type="number" min="8" max="512" value="64" />
+                </div>
+                <div class="field">
+                  <label for="updateDryRun">Dry run</label>
+                  <select id="updateDryRun">
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                  </select>
+                </div>
+              </div>
+              <div class="action-row">
+                <button class="action-button" type="button" id="runUpdateBtn">Run continuous update</button>
+              </div>
+              <div class="status-line" id="updateStatus">Idle</div>
+              <div class="response-box" id="updateResponse">Continuous update output will appear here.</div>
+            </section>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
   <script>
     const FEATURE_LABELS = {
-      CO2air: "Air Carbon Dioxide",
-      Cum_irr: "Cumulative Irrigation",
-      Tair: "Air Temperature",
-      Tot_PAR: "Total Photosynthetically Active Radiation",
-      Ventwind: "Wind-Side Vent Position",
-      AssimLight: "Assimilation Lighting Level",
-      VentLee: "Leeward Vent Position",
-      HumDef: "Humidity Deficit",
-      co2_dos: "Carbon Dioxide Dosing Rate",
-      PipeGrow: "Heating Pipe Growth Circuit",
-      EnScr: "Energy Screen Position",
-      BlackScr: "Blackout Screen Position",
-      Windsp: "Wind Speed",
-      Winddir: "Wind Direction",
-      Tout: "Outdoor Temperature",
-      Rhout: "Outdoor Relative Humidity",
-      AbsHumOut: "Outdoor Absolute Humidity",
-      PARout: "Outdoor Photosynthetically Active Radiation",
-      Iglob: "Global Irradiance",
-      Pyrgeo: "Pyrgeometer Radiation",
-      RadSum: "Radiation Sum",
+      CO2air: "Air CO2 concentration",
+      Cum_irr: "Cumulative irrigation",
+      Tair: "Air temperature",
+      Tot_PAR: "Total PAR",
+      Ventwind: "Wind-side vent position",
+      AssimLight: "Assimilation lighting",
+      VentLee: "Leeward vent position",
+      HumDef: "Humidity deficit",
+      co2_dos: "CO2 dosing rate",
+      PipeGrow: "Heating pipe growth circuit",
+      EnScr: "Energy screen position",
+      BlackScr: "Blackout screen position",
+      Windsp: "Wind speed",
+      Winddir: "Wind direction",
+      Tout: "Outdoor temperature",
+      Rhout: "Outdoor relative humidity",
+      AbsHumOut: "Outdoor absolute humidity",
+      PARout: "Outdoor PAR",
+      Iglob: "Global irradiance",
+      Pyrgeo: "Pyrgeometer radiation",
+      RadSum: "Radiation sum",
+    };
+
+    const OUTPUT_EXPLANATIONS = {
+      Tair: "Predicted greenhouse air temperature for the next step. Useful for climate comfort, crop health, and control tuning.",
+      CO2air: "Predicted CO2 concentration. Useful when balancing enrichment strategy, plant uptake, and energy-aware ventilation behavior.",
+      HumDef: "Predicted humidity deficit. Useful for condensation risk, transpiration management, and climate stability."
+    };
+
+    const COLORS = ["#1f7a5d", "#d9a441", "#b66055", "#457b9d", "#5f6ab2", "#8c8f3f", "#2f6f94"];
+
+    const state = {
+      activeTab: "summary",
+      predictMode: "direct",
+      modelInfo: null,
+      comparison: null,
+      pipelineConfig: null,
+      explainConfig: null,
+      mpcConfig: null,
+      samplePayload: null,
+      datasetWindow: null,
+      currentWindowData: null,
+      files: [],
+      lastPrediction: null,
+      lastMpc: null,
+      lastExplain: null,
+    };
+
+    const els = {
+      tabButtons: Array.from(document.querySelectorAll(".tab-button")),
+      panels: Array.from(document.querySelectorAll(".tab-panel")),
+      mobileTabs: document.getElementById("mobileTabs"),
+      jumpButtons: Array.from(document.querySelectorAll("[data-jump-tab]")),
+      heroBestModel: document.getElementById("heroBestModel"),
+      heroBestR2: document.getElementById("heroBestR2"),
+      heroTargetCount: document.getElementById("heroTargetCount"),
+      summaryBestModel: document.getElementById("summaryBestModel"),
+      summaryBestModelMeta: document.getElementById("summaryBestModelMeta"),
+      summaryR2: document.getElementById("summaryR2"),
+      summaryRmse: document.getElementById("summaryRmse"),
+      summaryTargets: document.getElementById("summaryTargets"),
+      summaryModelCount: document.getElementById("summaryModelCount"),
+      summaryModelBars: document.getElementById("summaryModelBars"),
+      summaryOutputTags: document.getElementById("summaryOutputTags"),
+      summaryLookback: document.getElementById("summaryLookback"),
+      summaryFeatureCount: document.getElementById("summaryFeatureCount"),
+      summaryModelType: document.getElementById("summaryModelType"),
+      datasetSplit: document.getElementById("datasetSplit"),
+      datasetIndex: document.getElementById("datasetIndex"),
+      loadSampleBtn: document.getElementById("loadSampleBtn"),
+      loadDatasetBtn: document.getElementById("loadDatasetBtn"),
+      predictPayload: document.getElementById("predictPayload"),
+      predictResponse: document.getElementById("predictResponse"),
+      predictStatus: document.getElementById("predictStatus"),
+      predictCards: document.getElementById("predictionCards"),
+      clearPredictBtn: document.getElementById("clearPredictBtn"),
+      runPredictBtn: document.getElementById("runPredictBtn"),
+      predictModeButtons: Array.from(document.querySelectorAll("#predictModeToggle .chip-button")),
+      predictDirectFields: document.getElementById("predictDirectFields"),
+      predictPipelineFields: document.getElementById("predictPipelineFields"),
+      predictInputHint: document.getElementById("predictInputHint"),
+      predictMergeStrategy: document.getElementById("predictMergeStrategy"),
+      predictFillMethod: document.getElementById("predictFillMethod"),
+      predictScalingMode: document.getElementById("predictScalingMode"),
+      predictLookback: document.getElementById("predictLookback"),
+      predictMergedRows: document.getElementById("predictMergedRows"),
+      predictGreenhouseRows: document.getElementById("predictGreenhouseRows"),
+      predictWeatherRows: document.getElementById("predictWeatherRows"),
+      comparisonBars: document.getElementById("comparisonBars"),
+      comparisonTableBody: document.getElementById("comparisonTableBody"),
+      modelsBestName: document.getElementById("modelsBestName"),
+      modelsBestRmse: document.getElementById("modelsBestRmse"),
+      modelsBestR2: document.getElementById("modelsBestR2"),
+      perTargetMetrics: document.getElementById("perTargetMetrics"),
+      mpcSteps: document.getElementById("mpcSteps"),
+      mpcHorizon: document.getElementById("mpcHorizon"),
+      mpcCandidates: document.getElementById("mpcCandidates"),
+      mpcSeed: document.getElementById("mpcSeed"),
+      mpcTargets: document.getElementById("mpcTargets"),
+      mpcTargetWeights: document.getElementById("mpcTargetWeights"),
+      mpcControlWeights: document.getElementById("mpcControlWeights"),
+      mpcBounds: document.getElementById("mpcBounds"),
+      mpcWeather: document.getElementById("mpcWeather"),
+      mpcInitialData: document.getElementById("mpcInitialData"),
+      mpcScenarioTextarea: document.getElementById("mpcScenarioTextarea"),
+      loadMpcDefaultsBtn: document.getElementById("loadMpcDefaultsBtn"),
+      useDatasetForMpcBtn: document.getElementById("useDatasetForMpcBtn"),
+      runMpcBtn: document.getElementById("runMpcBtn"),
+      runScenarioBtn: document.getElementById("runScenarioBtn"),
+      mpcStatus: document.getElementById("mpcStatus"),
+      mpcEnergy: document.getElementById("mpcEnergy"),
+      mpcStability: document.getElementById("mpcStability"),
+      mpcObjective: document.getElementById("mpcObjective"),
+      mpcResponse: document.getElementById("mpcResponse"),
+      mpcCanvas: document.getElementById("mpcCanvas"),
+      mpcLegend: document.getElementById("mpcLegend"),
+      explainMethod: document.getElementById("explainMethod"),
+      explainTarget: document.getElementById("explainTarget"),
+      explainTopK: document.getElementById("explainTopK"),
+      explainInputData: document.getElementById("explainInputData"),
+      useDatasetForExplainBtn: document.getElementById("useDatasetForExplainBtn"),
+      runExplainBtn: document.getElementById("runExplainBtn"),
+      explainStatus: document.getElementById("explainStatus"),
+      topFeatures: document.getElementById("topFeatures"),
+      heatmapCanvas: document.getElementById("heatmapCanvas"),
+      explainResponse: document.getElementById("explainResponse"),
+      trendSplit: document.getElementById("trendSplit"),
+      trendIndex: document.getElementById("trendIndex"),
+      trendFeatures: document.getElementById("trendFeatures"),
+      renderTrendsBtn: document.getElementById("renderTrendsBtn"),
+      useCurrentWindowBtn: document.getElementById("useCurrentWindowBtn"),
+      trendMetaNote: document.getElementById("trendMetaNote"),
+      trendStats: document.getElementById("trendStats"),
+      trendCanvas: document.getElementById("trendCanvas"),
+      trendLegend: document.getElementById("trendLegend"),
+      scriptSelect: document.getElementById("scriptSelect"),
+      scriptArgs: document.getElementById("scriptArgs"),
+      scriptTimeout: document.getElementById("scriptTimeout"),
+      refreshScriptsBtn: document.getElementById("refreshScriptsBtn"),
+      runScriptBtn: document.getElementById("runScriptBtn"),
+      scriptStatus: document.getElementById("scriptStatus"),
+      scriptSource: document.getElementById("scriptSource"),
+      scriptOutput: document.getElementById("scriptOutput"),
+      environmentTags: document.getElementById("environmentTags"),
+      pipelineInfo: document.getElementById("pipelineInfo"),
+      featureSchema: document.getElementById("featureSchema"),
+      updateRowsLimit: document.getElementById("updateRowsLimit"),
+      updateEpochs: document.getElementById("updateEpochs"),
+      updateBatchSize: document.getElementById("updateBatchSize"),
+      updateDryRun: document.getElementById("updateDryRun"),
+      runUpdateBtn: document.getElementById("runUpdateBtn"),
+      updateStatus: document.getElementById("updateStatus"),
+      updateResponse: document.getElementById("updateResponse"),
     };
 
     function friendlyFeatureName(key) {
       return FEATURE_LABELS[key] || key;
     }
 
-    function resolveFeatureKey(value) {
-      if (FEATURE_LABELS[value]) return value;
-      const normalized = String(value || "").trim().toLowerCase();
-      const direct = Object.keys(FEATURE_LABELS).find((k) => k.toLowerCase() === normalized);
-      if (direct) return direct;
-      const byLabel = Object.entries(FEATURE_LABELS).find(([, label]) => label.toLowerCase() === normalized);
-      return byLabel ? byLabel[0] : value;
+    function getTargetFeatures() {
+      const perTarget = state.modelInfo?.metrics?.per_target;
+      const derived = perTarget ? Object.keys(perTarget) : [];
+      return derived.length ? derived : ["Tair", "CO2air", "HumDef"];
     }
 
-    const payloadEl = document.getElementById("payload");
-    const responseEl = document.getElementById("response");
-    const statusEl = document.getElementById("status");
-    const usePipelinePredictEl = document.getElementById("usePipelinePredict");
-    const predictPipelinePanelEl = document.getElementById("predictPipelinePanel");
-    const predictMergeStrategyEl = document.getElementById("predictMergeStrategy");
-    const predictFillMethodEl = document.getElementById("predictFillMethod");
-    const predictScalingModeEl = document.getElementById("predictScalingMode");
-    const predictGreenhouseRowsEl = document.getElementById("predictGreenhouseRows");
-    const predictWeatherRowsEl = document.getElementById("predictWeatherRows");
-    const predictMergedRowsEl = document.getElementById("predictMergedRows");
-    const usePipelineMpcEl = document.getElementById("usePipelineMpc");
-    const mpcPipelinePanelEl = document.getElementById("mpcPipelinePanel");
-    const mpcMergeStrategyEl = document.getElementById("mpcMergeStrategy");
-    const mpcFillMethodEl = document.getElementById("mpcFillMethod");
-    const mpcScalingModeEl = document.getElementById("mpcScalingMode");
-    const mpcGreenhouseRowsEl = document.getElementById("mpcGreenhouseRows");
-    const mpcWeatherRowsEl = document.getElementById("mpcWeatherRows");
-    const mpcMergedRowsEl = document.getElementById("mpcMergedRows");
-    const pipelineFromSampleBtn = document.getElementById("pipelineFromSampleBtn");
-    const scriptSelectEl = document.getElementById("scriptSelect");
-    const scriptSourceEl = document.getElementById("scriptSource");
-    const scriptOutputEl = document.getElementById("scriptOutput");
-    const scriptStatusEl = document.getElementById("scriptStatus");
-    const scriptArgsEl = document.getElementById("scriptArgs");
-    const modelShapePillEl = document.getElementById("modelShapePill");
-    const payloadHelpEl = document.getElementById("payloadHelp");
-    const mpcStepsEl = document.getElementById("mpcSteps");
-    const mpcHorizonEl = document.getElementById("mpcHorizon");
-    const mpcCandidatesEl = document.getElementById("mpcCandidates");
-    const mpcTargetsEl = document.getElementById("mpcTargets");
-    const mpcTargetWeightsEl = document.getElementById("mpcTargetWeights");
-    const mpcControlWeightsEl = document.getElementById("mpcControlWeights");
-    const mpcBoundsEl = document.getElementById("mpcBounds");
-    const mpcWeatherEl = document.getElementById("mpcWeather");
-    const mpcScenariosEl = document.getElementById("mpcScenarios");
-    const mpcStatusEl = document.getElementById("mpcStatus");
-    const mpcOutputEl = document.getElementById("mpcOutput");
-    const mpcCanvasEl = document.getElementById("mpcCanvas");
-    const mpcScenarioOutputEl = document.getElementById("mpcScenarioOutput");
-    const vizFeaturesEl = document.getElementById("vizFeatures");
-    const trendCanvasEl = document.getElementById("trendCanvas");
-    const trendStatsEl = document.getElementById("trendStats");
-    const explainMethodEl = document.getElementById("explainMethod");
-    const explainTargetFeatureEl = document.getElementById("explainTargetFeature");
-    const explainTopKEl = document.getElementById("explainTopK");
-    const explainStatusEl = document.getElementById("explainStatus");
-    const heatmapCanvasEl = document.getElementById("heatmapCanvas");
-    const explainSummaryEl = document.getElementById("explainSummary");
-    const perfBestModelEl = document.getElementById("perfBestModel");
-    const perfRmseEl = document.getElementById("perfRmse");
-    const perfMaeEl = document.getElementById("perfMae");
-    const perfMapeEl = document.getElementById("perfMape");
-    const perfR2El = document.getElementById("perfR2");
-    const perfLookbackEl = document.getElementById("perfLookback");
-    const perfSummaryEl = document.getElementById("perfSummary");
-    const perfTableBodyEl = document.getElementById("perfTableBody");
-    const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
-    const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
-    document.getElementById("sampleBtn").onclick = async () => {
-      setStatus("Loading real dataset window...");
-      try {
-        const res = await fetch("/dataset-window?split=test&index=0");
-        if (!res.ok) throw new Error("Could not load dataset window");
-        const data = await res.json();
-
-        payloadEl.value = JSON.stringify({ data: data.data }, null, 2);
-        predictMergedRowsEl.value = JSON.stringify(data.merged_rows, null, 2);
-        mpcMergedRowsEl.value = JSON.stringify(data.merged_rows, null, 2);
-
-        predictGreenhouseRowsEl.value = "[]";
-        predictWeatherRowsEl.value = "[]";
-        mpcGreenhouseRowsEl.value = "[]";
-        mpcWeatherRowsEl.value = "[]";
-
-        setStatus(`Loaded ${data.split} dataset window`);
-      } catch (err) {
-        setError(err.message);
+    function formatNumber(value, digits = 2) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) {
+        return "--";
       }
-    };
-
-    document.getElementById("clearBtn").onclick = () => {
-      payloadEl.value = "";
-      responseEl.textContent = "Waiting for a request...";
-      setStatus("Idle");
-    };
-
-    document.getElementById("sendBtn").onclick = async () => {
-      if (!payloadEl.value.trim()) {
-        setError("Add JSON first (load sample or paste your own).");
-        return;
-      }
-
-      let basePayload;
-      try {
-        basePayload = JSON.parse(payloadEl.value);
-      } catch (err) {
-        setError("Invalid JSON: " + err.message);
-        return;
-      }
-      if (!Array.isArray(basePayload.data)) {
-        setError("Payload must contain a data array.");
-        return;
-      }
-
-      let requestBody;
-      let trendFocusFeature = null;
-      try {
-        requestBody = {
-          data: basePayload.data,
-          use_automated_pipeline: usePipelinePredictEl.checked,
-          automated_pipeline: usePipelinePredictEl.checked ? buildAutomatedPipelinePayload("predict") : {},
-        };
-      } catch (err) {
-        setError(err.message);
-        return;
-      }
-
-      setStatus("Sending...");
-      try {
-        const res = await fetch("/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-        const data = await res.json();
-        responseEl.textContent = JSON.stringify(data, null, 2);
-        setStatus(res.ok ? "Success" : "Server returned an error");
-      } catch (err) {
-        setError("Request failed: " + err.message);
-      }
-    };
-
-    function setStatus(msg) {
-      statusEl.textContent = msg;
-      statusEl.classList.remove("error");
-    }
-    function setError(msg) {
-      statusEl.textContent = msg;
-      statusEl.classList.add("error");
-    }
-
-    async function refreshScripts() {
-      setScriptStatus("Loading files...");
-      try {
-        const res = await fetch("/files");
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Failed to load files");
-        scriptSelectEl.innerHTML = "";
-        data.files.forEach((path) => {
-          const opt = document.createElement("option");
-          opt.value = path;
-          opt.textContent = path;
-          scriptSelectEl.appendChild(opt);
-        });
-        if (!data.files.length) {
-          scriptSourceEl.textContent = "No Python files found.";
-          setScriptStatus("No files found");
-          return;
-        }
-        setScriptStatus("Files loaded");
-        await loadSelectedFile();
-      } catch (err) {
-        setScriptError(err.message);
-      }
-    }
-
-    async function refreshModelInfo() {
-      try {
-        const res = await fetch("/model-info");
-        if (!res.ok) return;
-        const data = await res.json();
-        const lookback = data.lookback || 20;
-        window.currentLookback = lookback;
-        const featureCount = data.feature_count || 21;
-        window.currentFeatureSchema = Array.isArray(data.features) ? data.features : [];
-        modelShapePillEl.textContent = `Expects ${lookback} × ${featureCount} numbers`;
-        payloadHelpEl.innerHTML =
-          `Body must be <code>{\"data\": [[...${featureCount} floats...], ...${lookback} rows...]}</code>. Use the sample to start.`;
-        hydrateExplainFeatureSelect();
-      } catch (_err) {
-        // Keep default static text on failure.
-      }
-    }
-
-    function hydrateExplainFeatureSelect() {
-      const schema = window.currentFeatureSchema || [];
-      explainTargetFeatureEl.innerHTML = "";
-      schema.forEach((feature) => {
-        const opt = document.createElement("option");
-        opt.value = feature;
-        opt.textContent = friendlyFeatureName(feature);
-        explainTargetFeatureEl.appendChild(opt);
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
       });
-      const preferred = schema.includes("Tair") ? "Tair" : schema[0];
-      if (preferred) explainTargetFeatureEl.value = preferred;
     }
 
-    async function loadSelectedFile() {
-      const path = scriptSelectEl.value;
-      if (!path) {
-        scriptSourceEl.textContent = "No file selected.";
-        return;
+    function formatCompact(value, digits = 2) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) {
+        return "--";
       }
-      setScriptStatus("Loading source...");
-      try {
-        const res = await fetch(`/file?path=${encodeURIComponent(path)}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Failed to load source");
-        scriptSourceEl.textContent = data.content;
-        setScriptStatus("Ready");
-      } catch (err) {
-        setScriptError(err.message);
-      }
-    }
-
-    async function runSelectedScript() {
-      const path = scriptSelectEl.value;
-      if (!path) {
-        setScriptError("Select a script first.");
-        return;
-      }
-      const rawArgs = scriptArgsEl.value.trim();
-      const args = rawArgs ? rawArgs.split(/\s+/) : [];
-      setScriptStatus("Running...");
-      scriptOutputEl.textContent = "Executing...";
-
-      try {
-        const res = await fetch("/run-script", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            path,
-            args,
-            timeout_seconds: 25,
-          }),
+      const num = Number(value);
+      if (Math.abs(num) >= 1000) {
+        return num.toLocaleString(undefined, {
+          notation: "compact",
+          maximumFractionDigits: digits,
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Run failed");
-
-        const stdout = data.stdout ? `STDOUT\n${data.stdout}` : "STDOUT\n<empty>";
-        const stderr = data.stderr ? `STDERR\n${data.stderr}` : "STDERR\n<empty>";
-        scriptOutputEl.textContent =
-          `COMMAND\n${data.command.join(" ")}\n\nRETURN CODE\n${data.returncode}\n\n${stdout}\n\n${stderr}`;
-        setScriptStatus(data.ok ? "Completed" : "Completed with errors");
-      } catch (err) {
-        setScriptError(err.message);
-        scriptOutputEl.textContent = "Run failed.";
       }
+      return formatNumber(num, digits);
     }
 
-    function setScriptStatus(msg) {
-      scriptStatusEl.textContent = msg;
-      scriptStatusEl.classList.remove("error");
-    }
-
-    function setScriptError(msg) {
-      scriptStatusEl.textContent = msg;
-      scriptStatusEl.classList.add("error");
-    }
-
-    function setMpcStatus(msg) {
-      mpcStatusEl.textContent = msg;
-      mpcStatusEl.classList.remove("error");
-    }
-
-    function setMpcError(msg) {
-      mpcStatusEl.textContent = msg;
-      mpcStatusEl.classList.add("error");
-    }
-
-    function parseOptionalJson(rawValue, fieldName, fallback = {}) {
-      const trimmed = rawValue.trim();
-      if (!trimmed) {
+    function safeJsonParse(text, fallback = null) {
+      try {
+        return JSON.parse(text);
+      } catch {
         return fallback;
       }
-      try {
-        return JSON.parse(trimmed);
-      } catch (err) {
-        throw new Error(`${fieldName} is not valid JSON: ${err.message}`);
-      }
     }
 
-    function buildAutomatedPipelinePayload(mode) {
-      const isPredict = mode === "predict";
-      const mergeEl = isPredict ? predictMergeStrategyEl : mpcMergeStrategyEl;
-      const fillEl = isPredict ? predictFillMethodEl : mpcFillMethodEl;
-      const scalingEl = isPredict ? predictScalingModeEl : mpcScalingModeEl;
-      const greenhouseEl = isPredict ? predictGreenhouseRowsEl : mpcGreenhouseRowsEl;
-      const weatherEl = isPredict ? predictWeatherRowsEl : mpcWeatherRowsEl;
-      const mergedEl = isPredict ? predictMergedRowsEl : mpcMergedRowsEl;
-
-      const greenhouseRows = parseOptionalJson(greenhouseEl.value, "Greenhouse rows", []);
-      const weatherRows = parseOptionalJson(weatherEl.value, "Weather rows", []);
-      const mergedRows = parseOptionalJson(mergedEl.value, "Merged rows", []);
-
-      if (!Array.isArray(greenhouseRows) || !Array.isArray(weatherRows) || !Array.isArray(mergedRows)) {
-        throw new Error("Greenhouse, weather, and merged rows must be JSON arrays.");
+    async function apiFetch(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      const text = await response.text();
+      const data = text ? safeJsonParse(text, text) : null;
+      if (!response.ok) {
+        const detail = data && typeof data === "object" && "detail" in data ? data.detail : text;
+        throw new Error(detail || `Request failed: ${response.status}`);
       }
-
-      return {
-        lookback: Number(window.currentLookback || 20),
-        merge_strategy: mergeEl.value,
-        fill_method: fillEl.value,
-        scaling_mode: scalingEl.value,
-        greenhouse_rows: greenhouseRows,
-        weather_rows: weatherRows,
-        merged_rows: mergedRows,
-      };
+      return data;
     }
 
-    function setPipelinePanelVisibility() {
-      predictPipelinePanelEl.style.display = usePipelinePredictEl.checked ? "block" : "none";
-      mpcPipelinePanelEl.style.display = usePipelineMpcEl.checked ? "block" : "none";
+    function updateStatus(element, message, isError = false) {
+      element.textContent = message;
+      element.classList.toggle("error", isError);
     }
 
-    function buildPipelineSampleFromCurrentPayload() {
-      if (!payloadEl.value.trim()) {
-        setError("Load sample payload first.");
-        return;
-      }
-
-      try {
-        const parsed = JSON.parse(payloadEl.value);
-        if (!Array.isArray(parsed.data)) {
-          throw new Error("Payload must include data array.");
-        }
-        const rows = parsed.data.map((arr, idx) => ({
-          "%time": `t_${String(idx + 1).padStart(3, "0")}`,
-          CO2air: arr[0], Cum_irr: arr[1], Tair: arr[2], Tot_PAR: arr[3], Ventwind: arr[4],
-          AssimLight: arr[5], VentLee: arr[6], HumDef: arr[7], co2_dos: arr[8], PipeGrow: arr[9],
-          EnScr: arr[10], BlackScr: arr[11], Windsp: arr[12], Winddir: arr[13], Tout: arr[14],
-          Rhout: arr[15], AbsHumOut: arr[16], PARout: arr[17], Iglob: arr[18], Pyrgeo: arr[19], RadSum: arr[20],
-        }));
-        const rowsText = JSON.stringify(rows, null, 2);
-        predictMergedRowsEl.value = rowsText;
-        mpcMergedRowsEl.value = rowsText;
-        predictGreenhouseRowsEl.value = "[]";
-        predictWeatherRowsEl.value = "[]";
-        mpcGreenhouseRowsEl.value = "[]";
-        mpcWeatherRowsEl.value = "[]";
-        setStatus("Pipeline sample generated from loaded payload.");
-      } catch (err) {
-        setError("Could not build pipeline sample: " + err.message);
-      }
+    function setResponseBox(element, value, isError = false) {
+      element.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      element.classList.toggle("error", isError);
     }
 
-    async function loadPipelineDefaults() {
-      try {
-        const res = await fetch("/pipeline/default-config");
-        const data = await res.json();
-        if (!res.ok) return;
-        window.currentLookback = data.lookback || 20;
-        predictMergeStrategyEl.value = data.merge_strategy || "inner";
-        predictFillMethodEl.value = data.fill_method || "interpolate";
-        predictScalingModeEl.value = data.scaling_mode || "trained";
-        mpcMergeStrategyEl.value = data.merge_strategy || "inner";
-        mpcFillMethodEl.value = data.fill_method || "interpolate";
-        mpcScalingModeEl.value = data.scaling_mode || "trained";
-      } catch (_err) {
-        // Non-blocking fallback.
-      }
+    function buildMobileTabs() {
+      els.mobileTabs.innerHTML = "";
+      els.tabButtons.forEach((button) => {
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = `mobile-tab-pill${button.dataset.tab === state.activeTab ? " active" : ""}`;
+        pill.textContent = button.querySelector("strong").textContent;
+        pill.dataset.tab = button.dataset.tab;
+        pill.addEventListener("click", () => setActiveTab(button.dataset.tab));
+        els.mobileTabs.appendChild(pill);
+      });
     }
 
-    function currentWindowFromPayload() {
-      if (!payloadEl.value.trim()) {
-        throw new Error("Load sample payload first.");
-      }
-      const parsed = JSON.parse(payloadEl.value);
-      if (!Array.isArray(parsed.data)) {
-        throw new Error("Payload must include data array.");
-      }
-      return parsed.data;
+    function setActiveTab(tabName) {
+      state.activeTab = tabName;
+      els.tabButtons.forEach((button) => {
+        const active = button.dataset.tab === tabName;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      document.querySelectorAll(".mobile-tab-pill").forEach((pill) => {
+        pill.classList.toggle("active", pill.dataset.tab === tabName);
+      });
+      els.panels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === tabName);
+      });
     }
 
-    function renderTrendChart() {
-      let data;
-      try {
-        data = currentWindowFromPayload();
-      } catch (err) {
-        setError(err.message);
-        return;
-      }
+    function bindTabs() {
+      els.tabButtons.forEach((button) => {
+        button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+      });
+      els.jumpButtons.forEach((button) => {
+        button.addEventListener("click", () => setActiveTab(button.dataset.jumpTab));
+      });
+    }
 
-      const schema = window.currentFeatureSchema || [];
-      const selectedFeatures = vizFeaturesEl.value
-        .split(",")
-        .map((s) => s.trim())
-        .map((s) => resolveFeatureKey(s))
-        .filter((s) => s.length > 0 && schema.includes(s));
-
-      if (!selectedFeatures.length) {
-        setError("No valid features selected for trend chart.");
-        return;
-      }
-
-      const ctx = trendCanvasEl.getContext("2d");
-      const w = trendCanvasEl.width;
-      const h = trendCanvasEl.height;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "#0b1222";
-      ctx.fillRect(0, 0, w, h);
-
-      const palette = ["#38bdf8", "#22c55e", "#f97316", "#eab308", "#a78bfa", "#fb7185", "#2dd4bf"];
-      const paddingLeft = 52;
-      const paddingRight = 20;
-      const paddingTop = 18;
-      const paddingBottom = 28;
-      const plotW = w - paddingLeft - paddingRight;
-      const plotH = h - paddingTop - paddingBottom;
-      const n = data.length;
-
-      const seriesMap = {};
-      selectedFeatures.forEach((feature) => {
-        const idx = schema.indexOf(feature);
-        seriesMap[feature] = data.map((row) => {
-          const value = Number(row[idx]);
-          return Math.abs(value) < 1e-5 ? 0 : value;
+    function bindPredictModeToggle() {
+      els.predictModeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          state.predictMode = button.dataset.mode;
+          els.predictModeButtons.forEach((item) => item.classList.toggle("active", item === button));
+          els.predictDirectFields.classList.toggle("hidden", state.predictMode !== "direct");
+          els.predictPipelineFields.classList.toggle("hidden", state.predictMode !== "pipeline");
         });
       });
+    }
 
-      let globalMin = Infinity;
-      let globalMax = -Infinity;
-
-      selectedFeatures.forEach((feature) => {
-        const series = seriesMap[feature];
-        series.forEach((v) => {
-          globalMin = Math.min(globalMin, v);
-          globalMax = Math.max(globalMax, v);
-        });
-      });
-
-      if (!Number.isFinite(globalMin) || !Number.isFinite(globalMax) || globalMax === globalMin) {
-        globalMin = 0;
-        globalMax = 1;
+    function applyPayloadToAllTextareas(windowData, mergedRows = null) {
+      if (!windowData) {
+        return;
       }
-
-      let axisMin = globalMin;
-      let axisMax = globalMax;
-
-      if (trendFocusFeature && seriesMap[trendFocusFeature]) {
-        const focusSeries = seriesMap[trendFocusFeature];
-        let localMin = Math.min(...focusSeries);
-        let localMax = Math.max(...focusSeries);
-
-        const range = Math.max(localMax - localMin, 1e-6);
-        const padding = Math.max(range * 0.35, Math.abs(localMax) * 0.05, 0.25);
-
-        axisMin = localMin - padding;
-        axisMax = localMax + padding;
-
-        if (axisMax <= axisMin) {
-          axisMax = axisMin + 1;
-        }
+      const payload = { data: windowData };
+      els.predictPayload.value = JSON.stringify(payload, null, 2);
+      els.mpcInitialData.value = JSON.stringify(windowData, null, 2);
+      els.explainInputData.value = JSON.stringify(windowData, null, 2);
+      if (mergedRows) {
+        els.predictMergedRows.value = JSON.stringify(mergedRows, null, 2);
       }
+      state.currentWindowData = windowData;
+    }
 
-      ctx.strokeStyle = "rgba(148,163,184,0.25)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(paddingLeft, paddingTop, plotW, plotH);
-
-      const tickCount = 5;
-      ctx.font = "11px Segoe UI";
-      ctx.fillStyle = "#94a3b8";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-
-      for (let i = 0; i < tickCount; i++) {
-        const ratio = i / (tickCount - 1);
-        const y = paddingTop + ratio * plotH;
-        const value = axisMax - ratio * (axisMax - axisMin);
-
-        ctx.beginPath();
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + plotW, y);
-        ctx.strokeStyle = "rgba(148,163,184,0.12)";
-        ctx.stroke();
-
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillText(value.toFixed(2), paddingLeft - 8, y);
+    function renderSummary() {
+      if (!state.modelInfo) {
+        return;
       }
+      const aggregate = state.modelInfo.metrics && state.modelInfo.metrics.aggregate ? state.modelInfo.metrics.aggregate : {};
+      const ranking = Array.isArray(state.comparison?.ranking_by_rmse) ? state.comparison.ranking_by_rmse : [];
+      const best = ranking[0] || {};
 
-      selectedFeatures.forEach((feature, idx) => {
-        const series = seriesMap[feature];
-        const isFocused = trendFocusFeature === feature;
+      els.heroBestModel.textContent = titleizeArchitecture(best.architecture || state.modelInfo.architecture);
+      els.heroBestR2.textContent = formatNumber(aggregate.r2_variance_weighted ?? best.r2_variance_weighted, 3);
+      els.heroTargetCount.textContent = String(getTargetFeatures().length);
 
-        ctx.beginPath();
-        ctx.strokeStyle = palette[idx % palette.length];
-        ctx.lineWidth = isFocused ? 3 : 2;
-        ctx.globalAlpha = trendFocusFeature && !isFocused ? 0.35 : 1.0;
+      els.summaryBestModel.textContent = titleizeArchitecture(state.modelInfo.architecture);
+      els.summaryBestModelMeta.textContent = `${state.modelInfo.architecture_kind === "multi_input" ? "Multi-input climate + weather model" : "Single input sequence model"} deployed on the live API.`;
+      els.summaryR2.textContent = formatNumber(aggregate.r2_variance_weighted, 3);
+      els.summaryRmse.textContent = formatNumber(aggregate.rmse ?? best.rmse, 2);
+      els.summaryTargets.textContent = `${getTargetFeatures().length} targets`;
+      els.summaryModelCount.textContent = `${ranking.length || 1} models compared`;
+      els.summaryLookback.textContent = `${state.modelInfo.lookback} steps`;
+      els.summaryFeatureCount.textContent = String(state.modelInfo.feature_count);
+      els.summaryModelType.textContent = state.modelInfo.architecture_kind === "multi_input" ? "Multi-input" : "Single-input";
 
-        series.forEach((v, i) => {
-          const x = paddingLeft + (i / Math.max(n - 1, 1)) * plotW;
-          const y = paddingTop + (1 - (v - axisMin) / Math.max(axisMax - axisMin, 1e-6)) * plotH;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-
-        ctx.stroke();
-        ctx.globalAlpha = 1.0;
-      });
-
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "11px Segoe UI";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "alphabetic";
-      ctx.fillText(
-        trendFocusFeature
-          ? `Focused axis: ${friendlyFeatureName(trendFocusFeature)}`
-          : "Shared y-axis",
-        paddingLeft,
-        h - 8
-      );
-
-      trendStatsEl.innerHTML = "";
-      selectedFeatures.forEach((feature, idx) => {
-        const rawSeries = seriesMap[feature];
-        const latest = rawSeries[rawSeries.length - 1];
-        const delta = latest - rawSeries[0];
-        const isFocused = trendFocusFeature === feature;
-
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "metric";
-        card.style.cursor = "pointer";
-        card.style.textAlign = "left";
-        card.style.background = isFocused
-          ? "rgba(56, 189, 248, 0.14)"
-          : "rgba(11, 18, 34, 0.55)";
-        card.style.border = isFocused
-          ? "1px solid rgba(56, 189, 248, 0.55)"
-          : "1px solid rgba(148, 163, 184, 0.25)";
-        card.innerHTML = `
-          <div class="label">${friendlyFeatureName(feature)}</div>
-          <div class="value" style="color:${palette[idx % palette.length]}">${latest.toFixed(2)}</div>
-          <div class="label">Change ${delta.toFixed(2)}</div>
+      const maxRmse = Math.max(...ranking.map((item) => Number(item.rmse) || 0), 1);
+      els.summaryModelBars.innerHTML = ranking.map((item, index) => {
+        const width = Math.max(12, ((Number(item.rmse) || 0) / maxRmse) * 100);
+        return `
+          <div class="bar-row">
+            <div><strong>${index + 1}. ${titleizeArchitecture(item.architecture)}</strong></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${width}%; opacity:${index === 0 ? 1 : 0.75};"></div></div>
+            <div class="small">RMSE ${formatNumber(item.rmse, 2)}</div>
+          </div>
         `;
+      }).join("");
 
-        card.onclick = () => {
-          trendFocusFeature = feature;
-          renderTrendChart();
-        };
+      const outputTargets = getTargetFeatures();
+      els.summaryOutputTags.innerHTML = outputTargets.map((target) => `
+        <div class="feature-tag">
+          <span>${friendlyFeatureName(target)}</span>
+          <strong>${target}</strong>
+          <div class="small">${OUTPUT_EXPLANATIONS[target] || "Core forecast output for the greenhouse model."}</div>
+        </div>
+      `).join("");
+    }
 
-        trendStatsEl.appendChild(card);
+    function renderModelComparison() {
+      const ranking = Array.isArray(state.comparison?.ranking_by_rmse) ? state.comparison.ranking_by_rmse : [];
+      if (!ranking.length) {
+        els.comparisonBars.innerHTML = `<div class="small">No comparison data available.</div>`;
+        els.comparisonTableBody.innerHTML = `<tr><td colspan="6">No comparison data available.</td></tr>`;
+        return;
+      }
+
+      const best = ranking[0];
+      const deployedAggregate = state.modelInfo?.metrics?.aggregate || {};
+      els.modelsBestName.textContent = titleizeArchitecture(best.architecture || state.modelInfo?.architecture);
+      els.modelsBestRmse.textContent = formatNumber(best.rmse ?? deployedAggregate.rmse, 2);
+      els.modelsBestR2.textContent = formatNumber(best.r2_variance_weighted ?? deployedAggregate.r2_variance_weighted, 3);
+
+      const maxRmse = Math.max(...ranking.map((item) => Number(item.rmse) || 0), 1);
+      els.comparisonBars.innerHTML = ranking.map((item, index) => {
+        const width = Math.max(14, ((Number(item.rmse) || 0) / maxRmse) * 100);
+        return `
+          <div class="bar-row">
+            <div><strong>${titleizeArchitecture(item.architecture)}</strong></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${width}%; opacity:${index === 0 ? 1 : 0.72};"></div></div>
+            <div class="small">${formatNumber(item.rmse, 2)}</div>
+          </div>
+        `;
+      }).join("");
+
+      els.comparisonTableBody.innerHTML = ranking.map((item) => `
+        <tr>
+          <td><span class="rank-pill">${item.rank || "-"}</span></td>
+          <td>${titleizeArchitecture(item.architecture)}</td>
+          <td>${formatNumber(item.rmse, 2)}</td>
+          <td>${formatNumber(item.mae, 2)}</td>
+          <td>${formatNumber(item.smape ?? item.mape, 2)}</td>
+          <td>${formatNumber(item.r2_variance_weighted ?? item.r2, 3)}</td>
+        </tr>
+      `).join("");
+
+      const perTarget = state.modelInfo?.metrics?.per_target || {};
+      els.perTargetMetrics.innerHTML = Object.entries(perTarget).map(([feature, metrics]) => `
+        <div class="feature-tag">
+          <span>${friendlyFeatureName(feature)}</span>
+          <strong>RMSE ${formatNumber(metrics.rmse, 2)}</strong>
+          <div class="small">MAE ${formatNumber(metrics.mae, 2)} · R² ${formatNumber(metrics.r2, 3)}</div>
+        </div>
+      `).join("");
+    }
+
+    function titleizeArchitecture(value = "") {
+      return String(value)
+        .split("_")
+        .map((part) => part.toUpperCase() === "LSTM" ? "LSTM" : capitalize(part))
+        .join(" ");
+    }
+
+    function capitalize(value = "") {
+      return value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
+    }
+
+    function populateSelect(select, values) {
+      select.innerHTML = "";
+      values.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
       });
     }
 
-    function setExplainStatus(msg, isError = false) {
-      explainStatusEl.textContent = msg;
-      explainStatusEl.classList.toggle("error", isError);
-    }
-
-    function drawHeatmap(heatmap) {
-      const ctx = heatmapCanvasEl.getContext("2d");
-      const w = heatmapCanvasEl.width;
-      const h = heatmapCanvasEl.height;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "#0b1222";
-      ctx.fillRect(0, 0, w, h);
-
-      const rows = heatmap.length;
-      const cols = heatmap[0]?.length || 0;
-      if (!rows || !cols) return;
-
-      let maxVal = 0;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          maxVal = Math.max(maxVal, Math.abs(Number(heatmap[r][c])));
-        }
-      }
-      maxVal = Math.max(maxVal, 1e-9);
-
-      const cellW = w / cols;
-      const cellH = h / rows;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const norm = Math.abs(Number(heatmap[r][c])) / maxVal;
-          const red = Math.round(30 + 225 * norm);
-          const blue = Math.round(160 - 120 * norm);
-          ctx.fillStyle = `rgb(${red},80,${blue})`;
-          ctx.fillRect(c * cellW, r * cellH, cellW + 0.5, cellH + 0.5);
-        }
-      }
-    }
-
-    async function runExplainability() {
-      let basePayload;
+    async function loadBootstrapData() {
+      updateStatus(els.predictStatus, "Loading project metadata...");
       try {
-        basePayload = JSON.parse(payloadEl.value);
-        if (!Array.isArray(basePayload.data)) throw new Error("Payload data array missing.");
-      } catch (err) {
-        setExplainStatus("Load or paste valid payload first.", true);
+        const [modelInfo, comparison, pipelineConfig, explainConfig, mpcConfig, samplePayload, files] = await Promise.all([
+          apiFetch("/model-info"),
+          apiFetch("/model/comparison"),
+          apiFetch("/pipeline/default-config"),
+          apiFetch("/explain/default-config"),
+          apiFetch("/mpc/default-config"),
+          apiFetch("/sample"),
+          apiFetch("/files"),
+        ]);
+
+        state.modelInfo = modelInfo;
+        state.comparison = comparison;
+        state.pipelineConfig = pipelineConfig;
+        state.explainConfig = explainConfig;
+        state.mpcConfig = mpcConfig;
+        state.samplePayload = samplePayload;
+        state.files = files.files || [];
+
+        populatePredictControls();
+        renderSummary();
+        renderModelComparison();
+        renderEnvironment();
+        renderFiles();
+        loadDefaultTextareas();
+        applyPayloadToAllTextareas(samplePayload.data || []);
+        await loadDatasetWindow(els.datasetSplit.value, Number(els.datasetIndex.value), false);
+        updateStatus(els.predictStatus, "Ready");
+      } catch (error) {
+        updateStatus(els.predictStatus, error.message, true);
+        setResponseBox(els.predictResponse, error.message, true);
+      }
+    }
+
+    function populatePredictControls() {
+      if (!state.pipelineConfig || !state.explainConfig || !state.mpcConfig || !state.modelInfo) {
         return;
       }
 
-      let automatedPipeline = {};
-      try {
-        if (usePipelinePredictEl.checked) {
-          automatedPipeline = buildAutomatedPipelinePayload("predict");
-        }
-      } catch (err) {
-        setExplainStatus(err.message, true);
+      populateSelect(els.predictMergeStrategy, state.pipelineConfig.supported_merge_strategies || ["inner"]);
+      populateSelect(els.predictFillMethod, state.pipelineConfig.supported_fill_methods || ["interpolate"]);
+      populateSelect(els.predictScalingMode, state.pipelineConfig.supported_scaling_modes || ["trained"]);
+      els.predictLookback.value = String(state.pipelineConfig.lookback || state.modelInfo.lookback || 48);
+
+      populateSelect(els.explainMethod, state.explainConfig.methods || ["gradient_attention"]);
+      populateSelect(els.explainTarget, getTargetFeatures());
+      els.explainMethod.value = state.explainConfig.default_method || "gradient_attention";
+      els.explainTarget.value = state.explainConfig.default_target_feature || getTargetFeatures()[0];
+      els.explainTopK.value = String(state.explainConfig.top_k_features || 8);
+
+      els.predictInputHint.textContent = `Live model expects ${state.modelInfo.lookback} timesteps × ${state.modelInfo.feature_count} features. Feature order: ${state.modelInfo.features.join(", ")}.`;
+    }
+
+    function renderEnvironment() {
+      if (!state.modelInfo || !state.pipelineConfig) {
         return;
       }
 
-      const requestBody = {
-        data: basePayload.data,
-        use_automated_pipeline: usePipelinePredictEl.checked,
-        automated_pipeline: automatedPipeline,
-        method: explainMethodEl.value,
-        target_feature: explainTargetFeatureEl.value,
-        top_k_features: Number(explainTopKEl.value),
-      };
+      const environmentItems = [
+        ["Architecture", titleizeArchitecture(state.modelInfo.architecture)],
+        ["Model kind", state.modelInfo.architecture_kind],
+        ["Lookback", `${state.modelInfo.lookback} steps`],
+        ["Feature count", String(state.modelInfo.feature_count)],
+        ["Prediction horizon", String(state.modelInfo.horizon ?? 1)],
+      ];
 
-      setExplainStatus("Running explainability...");
+      els.environmentTags.innerHTML = environmentItems.map(([label, value]) => `
+        <div class="feature-tag">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `).join("");
+
+      els.pipelineInfo.textContent = JSON.stringify(state.pipelineConfig, null, 2);
+
+      const climate = state.modelInfo.climate_features || [];
+      const weather = state.modelInfo.weather_features || [];
+      els.featureSchema.innerHTML = [...climate.map((feature) => ({ feature, bucket: "Climate" })), ...weather.map((feature) => ({ feature, bucket: "Weather" }))].map(({ feature, bucket }) => `
+        <div class="feature-tag">
+          <span>${bucket}</span>
+          <strong>${friendlyFeatureName(feature)}</strong>
+          <div class="small mono">${feature}</div>
+        </div>
+      `).join("");
+    }
+
+    function loadDefaultTextareas() {
+      if (!state.mpcConfig) {
+        return;
+      }
+      const recommended = state.mpcConfig.recommended || {};
+      els.mpcSteps.value = String(recommended.steps || 12);
+      els.mpcHorizon.value = String(recommended.horizon || 6);
+      els.mpcCandidates.value = String(recommended.candidate_sequences || 80);
+      els.mpcTargets.value = JSON.stringify(state.mpcConfig.target_setpoints || {}, null, 2);
+      els.mpcTargetWeights.value = JSON.stringify(state.mpcConfig.target_weights || {}, null, 2);
+      els.mpcControlWeights.value = JSON.stringify(state.mpcConfig.control_weights || {}, null, 2);
+      els.mpcScenarioTextarea.value = JSON.stringify(state.mpcConfig.scenario_templates || [], null, 2);
+    }
+
+    async function loadDatasetWindow(split, index, announce = true) {
+      if (announce) {
+        updateStatus(els.predictStatus, "Loading dataset window...");
+      }
+      const data = await apiFetch(`/dataset-window?split=${encodeURIComponent(split)}&index=${encodeURIComponent(index)}`);
+      state.datasetWindow = data;
+      state.currentWindowData = data.data;
+      applyPayloadToAllTextareas(data.data, data.merged_rows);
+      els.trendMetaNote.textContent = `Loaded ${split} window ${index} · ${data.lookback} timesteps · ${data.feature_count} features.`;
+      renderTrendStats(data.merged_rows || [], ["Tair", "CO2air", "HumDef"]);
+      if (announce) {
+        updateStatus(els.predictStatus, `Loaded ${split} window ${index}`);
+      }
+      return data;
+    }
+
+    function renderPredictionCards(prediction) {
+      const targets = getTargetFeatures();
+      els.predictCards.innerHTML = targets.map((target) => `
+        <div class="prediction-card">
+          <span>${friendlyFeatureName(target)}</span>
+          <strong>${formatNumber(prediction?.[target], target === "CO2air" ? 1 : 2)}</strong>
+          <small>${OUTPUT_EXPLANATIONS[target] || "Predicted target output."}</small>
+        </div>
+      `).join("");
+    }
+
+    function getPredictRequestBody() {
+      if (state.predictMode === "pipeline") {
+        return {
+          use_automated_pipeline: true,
+          automated_pipeline: {
+            lookback: Number(els.predictLookback.value),
+            merge_strategy: els.predictMergeStrategy.value,
+            fill_method: els.predictFillMethod.value,
+            scaling_mode: els.predictScalingMode.value,
+            merged_rows: safeJsonParse(els.predictMergedRows.value, []),
+            greenhouse_rows: safeJsonParse(els.predictGreenhouseRows.value, []),
+            weather_rows: safeJsonParse(els.predictWeatherRows.value, []),
+          },
+        };
+      }
+      return safeJsonParse(els.predictPayload.value, {});
+    }
+
+    async function runPrediction() {
+      updateStatus(els.predictStatus, "Running prediction...");
       try {
-        const res = await fetch("/explain", {
+        const body = getPredictRequestBody();
+        const result = await apiFetch("/predict", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify(body),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Explainability failed");
-
-        drawHeatmap(data.heatmap || []);
-        const topLines = (data.top_features || [])
-          .map((item) => `${item.rank}. ${friendlyFeatureName(item.feature)} (score: ${Number(item.score).toFixed(4)})`)
-          .join("\n");
-        explainSummaryEl.textContent =
-          `Method: ${data.method === "gradient_attention" ? "Attention Heatmap (Gradient)" : "SHAP-like (Perturbation)"}\n` +
-          `Target: ${friendlyFeatureName(data.target_feature)}\n` +
-          `Predicted value: ${Number(data.target_prediction).toFixed(3)}\n` +
-          `Automated pipeline: ${data.used_automated_pipeline ? "Enabled" : "Disabled"}\n\n` +
-          `Top contributing features:\n${topLines || "No feature ranking available."}`;
-        setExplainStatus("Explainability complete");
-      } catch (err) {
-        setExplainStatus(err.message, true);
+        state.lastPrediction = result;
+        renderPredictionCards(result.prediction || {});
+        setResponseBox(els.predictResponse, result);
+        updateStatus(els.predictStatus, result.used_automated_pipeline ? "Prediction complete using pipeline mode" : "Prediction complete");
+      } catch (error) {
+        updateStatus(els.predictStatus, error.message, true);
+        setResponseBox(els.predictResponse, error.message, true);
       }
     }
 
-    async function loadMpcDefaults() {
-      setMpcStatus("Loading MPC defaults...");
-      try {
-        const res = await fetch("/mpc/default-config");
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Could not load MPC defaults");
-        const rec = data.recommended || {};
-        if (rec.steps) mpcStepsEl.value = rec.steps;
-        if (rec.horizon) mpcHorizonEl.value = rec.horizon;
-        if (rec.candidate_sequences) mpcCandidatesEl.value = rec.candidate_sequences;
-        mpcTargetsEl.value = JSON.stringify(data.target_setpoints || {}, null, 2);
-        mpcTargetWeightsEl.value = JSON.stringify(data.target_weights || {}, null, 2);
-        mpcControlWeightsEl.value = JSON.stringify(data.control_weights || {}, null, 2);
-        setMpcStatus("MPC defaults loaded");
-      } catch (err) {
-        setMpcError(err.message);
+    function getCurrentDataOrFallback() {
+      if (Array.isArray(state.currentWindowData) && state.currentWindowData.length) {
+        return state.currentWindowData;
       }
+      if (Array.isArray(state.samplePayload?.data) && state.samplePayload.data.length) {
+        return state.samplePayload.data;
+      }
+      return [];
     }
 
-    async function loadExplainDefaults() {
-      try {
-        const res = await fetch("/explain/default-config");
-        const data = await res.json();
-        if (!res.ok) return;
-        if (Array.isArray(data.methods) && data.methods.includes(data.default_method)) {
-          explainMethodEl.value = data.default_method;
-        }
-        if (typeof data.top_k_features === "number") {
-          explainTopKEl.value = data.top_k_features;
-        }
-        if (data.default_target_feature) {
-          explainTargetFeatureEl.value = data.default_target_feature;
-        }
-      } catch (_err) {
-        // Non-blocking fallback.
-      }
+    function buildMpcRequestBase() {
+      return {
+        data: safeJsonParse(els.mpcInitialData.value, getCurrentDataOrFallback()),
+        steps: Number(els.mpcSteps.value),
+        horizon: Number(els.mpcHorizon.value),
+        candidate_sequences: Number(els.mpcCandidates.value),
+        random_seed: Number(els.mpcSeed.value),
+        target_setpoints: safeJsonParse(els.mpcTargets.value, {}),
+        target_weights: safeJsonParse(els.mpcTargetWeights.value, {}),
+        control_weights: safeJsonParse(els.mpcControlWeights.value, {}),
+        control_bounds: safeJsonParse(els.mpcBounds.value, {}),
+        weather_forecast: safeJsonParse(els.mpcWeather.value, []),
+      };
     }
 
     async function runMpcSimulation() {
-      if (!payloadEl.value.trim()) {
-        setMpcError("Load sample payload or paste input JSON first.");
-        return;
-      }
-
-      let basePayload;
+      updateStatus(els.mpcStatus, "Running MPC simulation...");
       try {
-        basePayload = JSON.parse(payloadEl.value);
-      } catch (err) {
-        setMpcError("Base payload is invalid JSON: " + err.message);
-        return;
-      }
-
-      if (!Array.isArray(basePayload.data)) {
-        setMpcError("Base payload must have a data array.");
-        return;
-      }
-
-      let targetSetpoints;
-      let targetWeights;
-      let controlWeights;
-      let controlBounds;
-      let weatherForecast;
-      try {
-        targetSetpoints = parseOptionalJson(mpcTargetsEl.value, "Target setpoints");
-        targetWeights = parseOptionalJson(mpcTargetWeightsEl.value, "Target weights");
-        controlWeights = parseOptionalJson(mpcControlWeightsEl.value, "Control weights");
-        controlBounds = parseOptionalJson(mpcBoundsEl.value, "Control bounds");
-        weatherForecast = parseOptionalJson(mpcWeatherEl.value, "Weather forecast", []);
-      } catch (err) {
-        setMpcError(err.message);
-        return;
-      }
-
-      if (!Array.isArray(weatherForecast)) {
-        setMpcError("Weather forecast must be a JSON array.");
-        return;
-      }
-
-      const reqBody = {
-        data: basePayload.data,
-        use_automated_pipeline: usePipelineMpcEl.checked,
-        automated_pipeline: usePipelineMpcEl.checked ? buildAutomatedPipelinePayload("mpc") : {},
-        steps: Number(mpcStepsEl.value),
-        horizon: Number(mpcHorizonEl.value),
-        candidate_sequences: Number(mpcCandidatesEl.value),
-        target_setpoints: targetSetpoints,
-        target_weights: targetWeights,
-        control_weights: controlWeights,
-        control_bounds: controlBounds,
-        weather_forecast: weatherForecast,
-      };
-
-      setMpcStatus("Running MPC simulation...");
-      mpcOutputEl.textContent = "Simulating...";
-
-      try {
-        const res = await fetch("/mpc/simulate", {
+        const body = buildMpcRequestBase();
+        const result = await apiFetch("/mpc/simulate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(reqBody),
+          body: JSON.stringify(body),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "MPC simulation failed");
-
-        const summary = {
-          controller: data.controller,
-          steps: data.steps,
-          horizon: data.horizon,
-          candidate_sequences: data.candidate_sequences,
-          objective_trace: data.objective_trace,
-          energy_efficiency_score: data.energy_efficiency_score,
-          stability_index: data.stability_index,
-          final_state: data.final_state,
-          control_bounds: data.control_bounds,
-        };
-        mpcOutputEl.textContent =
-          `SUMMARY\\n${JSON.stringify(summary, null, 2)}\\n\\nFULL RESULT\\n${JSON.stringify(data, null, 2)}`;
-        drawMpcTrajectory(data);
-        setMpcStatus("MPC simulation complete");
-      } catch (err) {
-        setMpcError(err.message);
-        mpcOutputEl.textContent = "Simulation failed.";
+        state.lastMpc = result;
+        els.mpcEnergy.textContent = formatNumber(result.energy_efficiency_score, 3);
+        els.mpcStability.textContent = formatNumber(result.stability_index, 3);
+        const objective = Array.isArray(result.objective_trace) && result.objective_trace.length ? result.objective_trace[result.objective_trace.length - 1] : null;
+        els.mpcObjective.textContent = formatNumber(objective, 3);
+        setResponseBox(els.mpcResponse, result);
+        renderMpcChart(result);
+        updateStatus(els.mpcStatus, "MPC simulation complete");
+      } catch (error) {
+        updateStatus(els.mpcStatus, error.message, true);
+        setResponseBox(els.mpcResponse, error.message, true);
       }
     }
 
-    function drawMpcTrajectory(data) {
-      const ctx = mpcCanvasEl.getContext("2d");
-      const w = mpcCanvasEl.width;
-      const h = mpcCanvasEl.height;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "#0b1222";
-      ctx.fillRect(0, 0, w, h);
-
-      const steps = Array.isArray(data.results) ? data.results : [];
-      if (!steps.length) return;
-
-      const targets = ["Tair", "CO2air", "HumDef"].filter((f) => steps[0].predicted_state?.[f] !== undefined);
-      if (!targets.length) return;
-
-      const palette = ["#38bdf8", "#22c55e", "#f97316"];
-      const series = targets.map((f) => steps.map((s) => Number(s.predicted_state[f])));
-      let minV = Math.min(...series.flat());
-      let maxV = Math.max(...series.flat());
-      if (!Number.isFinite(minV) || !Number.isFinite(maxV) || minV === maxV) { minV = 0; maxV = 1; }
-
-      const pad = 22;
-      const plotW = w - pad * 2;
-      const plotH = h - pad * 2;
-      ctx.strokeStyle = "rgba(148,163,184,0.25)";
-      ctx.strokeRect(pad, pad, plotW, plotH);
-
-      series.forEach((arr, idx) => {
-        ctx.beginPath();
-        ctx.strokeStyle = palette[idx % palette.length];
-        ctx.lineWidth = 2;
-        arr.forEach((v, i) => {
-          const x = pad + (i / Math.max(arr.length - 1, 1)) * plotW;
-          const y = pad + (1 - (v - minV) / Math.max(maxV - minV, 1e-6)) * plotH;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+    async function runScenarioBenchmark() {
+      updateStatus(els.mpcStatus, "Running scenario benchmark...");
+      try {
+        const body = {
+          ...buildMpcRequestBase(),
+          scenarios: safeJsonParse(els.mpcScenarioTextarea.value, []),
+        };
+        const result = await apiFetch("/mpc/evaluate-scenarios", {
+          method: "POST",
+          body: JSON.stringify(body),
         });
+        const topRanking = Array.isArray(result.ranking) ? result.ranking.slice(0, 3) : [];
+        setResponseBox(els.mpcResponse, {
+          top_ranked_scenarios: topRanking,
+          full_response: result,
+        });
+        if (topRanking[0]) {
+          els.mpcEnergy.textContent = formatNumber(topRanking[0].energy_efficiency_score, 3);
+          els.mpcStability.textContent = formatNumber(topRanking[0].stability_index, 3);
+          els.mpcObjective.textContent = formatNumber(topRanking[0].objective_final, 3);
+        }
+        updateStatus(els.mpcStatus, `Scenario benchmark complete across ${result.scenarios_evaluated} scenarios`);
+      } catch (error) {
+        updateStatus(els.mpcStatus, error.message, true);
+        setResponseBox(els.mpcResponse, error.message, true);
+      }
+    }
+
+    function renderMpcChart(result) {
+      const tracked = Array.isArray(result.predicted_target_trajectory)
+        ? result.predicted_target_trajectory
+        : Array.isArray(result.target_trajectory)
+          ? result.target_trajectory
+          : [];
+
+      if (!tracked.length) {
+        drawEmptyCanvas(els.mpcCanvas, "No MPC trajectory available");
+        els.mpcLegend.innerHTML = "";
+        return;
+      }
+
+      const targets = getTargetFeatures().length ? getTargetFeatures() : Object.keys(tracked[0] || {});
+      const series = targets.map((target, index) => ({
+        name: target,
+        color: COLORS[index % COLORS.length],
+        values: tracked.map((row) => Number(row[target])),
+      }));
+
+      drawLineChart(els.mpcCanvas, series, { normalize: false, yLabel: "Predicted value" });
+      els.mpcLegend.innerHTML = series.map((item) => `
+        <div class="legend-item">
+          <span class="legend-swatch" style="background:${item.color};"></span>
+          <span>${friendlyFeatureName(item.name)}</span>
+        </div>
+      `).join("");
+    }
+
+    async function runExplainability() {
+      updateStatus(els.explainStatus, "Running explainability...");
+      try {
+        const body = {
+          data: safeJsonParse(els.explainInputData.value, getCurrentDataOrFallback()),
+          method: els.explainMethod.value,
+          target_feature: els.explainTarget.value,
+          top_k_features: Number(els.explainTopK.value),
+        };
+        const result = await apiFetch("/explain", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        state.lastExplain = result;
+        els.topFeatures.innerHTML = (result.top_features || []).map((feature) => `
+          <div class="feature-tag">
+            <span>#${feature.rank}</span>
+            <strong>${friendlyFeatureName(feature.feature)}</strong>
+            <div class="small">Score ${formatNumber(feature.score, 4)}</div>
+          </div>
+        `).join("");
+        drawHeatmap(els.heatmapCanvas, result.heatmap || [], result.features || []);
+        setResponseBox(els.explainResponse, result);
+        updateStatus(els.explainStatus, `Explainability complete for ${friendlyFeatureName(result.target_feature)}`);
+      } catch (error) {
+        updateStatus(els.explainStatus, error.message, true);
+        setResponseBox(els.explainResponse, error.message, true);
+      }
+    }
+
+    async function renderTrends(useCurrentWindow = false) {
+      try {
+        let dataset = state.datasetWindow;
+        if (!useCurrentWindow) {
+          dataset = await loadDatasetWindow(els.trendSplit.value, Number(els.trendIndex.value), false);
+        }
+        const sourceRows = useCurrentWindow && state.datasetWindow ? state.datasetWindow.merged_rows : dataset?.merged_rows;
+        if (!Array.isArray(sourceRows) || !sourceRows.length) {
+          throw new Error("No trend rows available");
+        }
+
+        const features = els.trendFeatures.value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        const normalizedSeries = features
+          .filter((feature) => feature in sourceRows[0])
+          .map((feature, index) => ({
+            name: feature,
+            color: COLORS[index % COLORS.length],
+            values: normalizeSeries(sourceRows.map((row) => Number(row[feature]))),
+          }));
+
+        drawLineChart(els.trendCanvas, normalizedSeries, { normalize: true, yLabel: "Normalized value" });
+        els.trendLegend.innerHTML = normalizedSeries.map((item) => `
+          <div class="legend-item">
+            <span class="legend-swatch" style="background:${item.color};"></span>
+            <span>${friendlyFeatureName(item.name)}</span>
+          </div>
+        `).join("");
+        renderTrendStats(sourceRows, features.slice(0, 4));
+        els.trendMetaNote.textContent = `Showing ${features.length} feature trends from ${dataset?.split || els.trendSplit.value} split, window ${dataset?.index ?? els.trendIndex.value}. Values are normalized for comparison.`;
+      } catch (error) {
+        els.trendMetaNote.textContent = error.message;
+        drawEmptyCanvas(els.trendCanvas, "Unable to render trends");
+        els.trendLegend.innerHTML = "";
+      }
+    }
+
+    function renderTrendStats(rows, features) {
+      if (!Array.isArray(rows) || !rows.length) {
+        els.trendStats.innerHTML = "";
+        return;
+      }
+      const stats = features
+        .filter((feature) => rows[0] && feature in rows[0])
+        .map((feature) => {
+          const values = rows.map((row) => Number(row[feature]));
+          const latest = values[values.length - 1];
+          const delta = latest - values[0];
+          return `
+            <div class="feature-tag">
+              <span>${friendlyFeatureName(feature)}</span>
+              <strong>${formatCompact(latest, feature === "CO2air" ? 1 : 2)}</strong>
+              <div class="small">Window shift ${formatNumber(delta, 2)}</div>
+            </div>
+          `;
+        });
+      els.trendStats.innerHTML = stats.join("");
+    }
+
+    function normalizeSeries(values) {
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = max - min || 1;
+      return values.map((value) => (value - min) / span);
+    }
+
+    function drawEmptyCanvas(canvas, message) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#f8f6ef";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#5d746c";
+      ctx.font = "16px Avenir Next, Segoe UI, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+    }
+
+    function drawLineChart(canvas, series, options = {}) {
+      const ctx = canvas.getContext("2d");
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#faf8f1";
+      ctx.fillRect(0, 0, width, height);
+
+      if (!series.length || !series[0].values.length) {
+        drawEmptyCanvas(canvas, "No chart data available");
+        return;
+      }
+
+      const padding = { top: 24, right: 24, bottom: 34, left: 44 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const flattened = series.flatMap((item) => item.values);
+      const min = Math.min(...flattened);
+      const max = Math.max(...flattened);
+      const range = max - min || 1;
+      const pointCount = series[0].values.length;
+
+      ctx.strokeStyle = "rgba(20, 49, 41, 0.08)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i += 1) {
+        const y = padding.top + (chartHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#5d746c";
+      ctx.font = "11px Avenir Next, Segoe UI, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(formatNumber(max, 2), padding.left - 8, padding.top + 4);
+      ctx.fillText(formatNumber(min, 2), padding.left - 8, padding.top + chartHeight);
+
+      series.forEach((item) => {
+        ctx.beginPath();
+        item.values.forEach((value, index) => {
+          const x = padding.left + (index / Math.max(pointCount - 1, 1)) * chartWidth;
+          const y = padding.top + chartHeight - ((value - min) / range) * chartHeight;
+          if (index === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 2.4;
         ctx.stroke();
       });
+
+      ctx.fillStyle = "#5d746c";
+      ctx.textAlign = "center";
+      ctx.fillText(options.yLabel || "Value", width / 2, height - 10);
     }
 
-    async function runMpcScenarioBenchmark() {
-      let basePayload;
-      try {
-        basePayload = JSON.parse(payloadEl.value);
-        if (!Array.isArray(basePayload.data)) throw new Error("Payload data array missing.");
-      } catch (err) {
-        setMpcError("Load valid payload first.");
+    function drawHeatmap(canvas, matrix, features) {
+      const ctx = canvas.getContext("2d");
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#faf8f1";
+      ctx.fillRect(0, 0, width, height);
+
+      if (!Array.isArray(matrix) || !matrix.length || !Array.isArray(matrix[0]) || !matrix[0].length) {
+        drawEmptyCanvas(canvas, "No heatmap data available");
         return;
       }
 
-      let scenarios;
-      try {
-        scenarios = parseOptionalJson(mpcScenariosEl.value, "Scenario list", []);
-      } catch (err) {
-        setMpcError(err.message);
-        return;
-      }
-      if (!Array.isArray(scenarios) || scenarios.length === 0) {
-        setMpcError("Scenario list must be a non-empty JSON array.");
-        return;
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      const padding = { top: 24, right: 20, bottom: 56, left: 58 };
+      const cellWidth = (width - padding.left - padding.right) / cols;
+      const cellHeight = (height - padding.top - padding.bottom) / rows;
+      const flat = matrix.flat();
+      const max = Math.max(...flat, 0.00001);
+
+      for (let r = 0; r < rows; r += 1) {
+        for (let c = 0; c < cols; c += 1) {
+          const intensity = matrix[r][c] / max;
+          const color = `rgba(${Math.round(31 + 186 * intensity)}, ${Math.round(122 + 70 * intensity)}, ${Math.round(93 - 25 * intensity)}, ${0.18 + intensity * 0.82})`;
+          ctx.fillStyle = color;
+          ctx.fillRect(padding.left + c * cellWidth, padding.top + r * cellHeight, cellWidth - 1, cellHeight - 1);
+        }
       }
 
-      let automatedPipeline = {};
-      try {
-        automatedPipeline = usePipelineMpcEl.checked ? buildAutomatedPipelinePayload("mpc") : {};
-      } catch (err) {
-        setMpcError(err.message);
+      ctx.fillStyle = "#5d746c";
+      ctx.font = "11px Avenir Next, Segoe UI, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("recent", padding.left - 10, padding.top + 12);
+      ctx.fillText("older", padding.left - 10, height - padding.bottom);
+
+      ctx.textAlign = "center";
+      const maxLabels = Math.min(cols, 6);
+      for (let i = 0; i < maxLabels; i += 1) {
+        const colIndex = Math.round((i / Math.max(maxLabels - 1, 1)) * (cols - 1));
+        const label = friendlyFeatureName(features[colIndex] || `F${colIndex + 1}`);
+        ctx.save();
+        ctx.translate(padding.left + colIndex * cellWidth + cellWidth / 2, height - padding.bottom + 8);
+        ctx.rotate(-0.48);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    function renderFiles() {
+      els.scriptSelect.innerHTML = "";
+      state.files.forEach((file) => {
+        const option = document.createElement("option");
+        option.value = file;
+        option.textContent = file;
+        els.scriptSelect.appendChild(option);
+      });
+      if (state.files.length) {
+        loadScriptSource(state.files[0]);
+      }
+    }
+
+    async function loadScriptSource(path) {
+      if (!path) {
         return;
       }
-
-      setMpcStatus("Running scenario benchmark...");
       try {
-        const res = await fetch("/mpc/evaluate-scenarios", {
+        const data = await apiFetch(`/file?path=${encodeURIComponent(path)}`);
+        els.scriptSource.textContent = data.content;
+      } catch (error) {
+        els.scriptSource.textContent = error.message;
+      }
+    }
+
+    async function refreshFiles() {
+      updateStatus(els.scriptStatus, "Refreshing script list...");
+      try {
+        const files = await apiFetch("/files");
+        state.files = files.files || [];
+        renderFiles();
+        updateStatus(els.scriptStatus, `Loaded ${state.files.length} Python files`);
+      } catch (error) {
+        updateStatus(els.scriptStatus, error.message, true);
+      }
+    }
+
+    async function runScript() {
+      updateStatus(els.scriptStatus, "Running script...");
+      try {
+        const body = {
+          path: els.scriptSelect.value,
+          args: els.scriptArgs.value.trim() ? els.scriptArgs.value.trim().split(/\s+/) : [],
+          timeout_seconds: Number(els.scriptTimeout.value),
+        };
+        const result = await apiFetch("/run-script", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            data: basePayload.data,
-            use_automated_pipeline: usePipelineMpcEl.checked,
-            automated_pipeline: automatedPipeline,
-            steps: Number(mpcStepsEl.value),
-            horizon: Number(mpcHorizonEl.value),
-            candidate_sequences: Number(mpcCandidatesEl.value),
-            scenarios,
-          }),
+          body: JSON.stringify(body),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Scenario benchmark failed");
-        mpcScenarioOutputEl.textContent = JSON.stringify(data.ranking || data, null, 2);
-        setMpcStatus("Scenario benchmark complete");
-      } catch (err) {
-        setMpcError(err.message);
+        els.scriptOutput.textContent = JSON.stringify(result, null, 2);
+        updateStatus(els.scriptStatus, result.ok ? "Script completed" : `Script exited with code ${result.returncode}`);
+      } catch (error) {
+        updateStatus(els.scriptStatus, error.message, true);
+        els.scriptOutput.textContent = error.message;
       }
     }
 
-    async function loadModelPerformance() {
-    try {
-      const [infoRes, comparisonRes] = await Promise.all([
-        fetch("/model-info"),
-        fetch("/model/comparison")
-      ]);
-
-      const info = await infoRes.json();
-      const comparisonPayload = await comparisonRes.json();
-
-      if (!infoRes.ok) {
-        throw new Error(info.detail || "Failed to load model info");
-      }
-      if (!comparisonRes.ok) {
-        throw new Error(comparisonPayload.detail || "Failed to load model comparison");
-      }
-
-      const comparison = comparisonPayload.comparison || comparisonPayload;
-      const results = comparisonPayload.results || [];
-
-      const metrics = info.metrics || {};
-      perfBestModelEl.textContent = info.architecture || "-";
-      perfRmseEl.textContent = metrics.rmse != null ? Number(metrics.rmse).toFixed(2) : "-";
-      perfMaeEl.textContent = metrics.mae != null ? Number(metrics.mae).toFixed(2) : "-";
-      perfMapeEl.textContent = metrics.mape != null ? `${Number(metrics.mape).toFixed(2)}%` : "-";
-      perfR2El.textContent = metrics.r2 != null ? Number(metrics.r2).toFixed(3) : "-";
-      perfLookbackEl.textContent = info.lookback != null ? String(info.lookback) : "-";
-
-      const bestEnhanced = comparison.best_enhanced?.architecture || "-";
-      const rmseImprovement = comparison.improvement_vs_baseline?.rmse_pct;
-      const mapeImprovement = comparison.improvement_vs_baseline?.mape_pct;
-
-      perfSummaryEl.textContent =
-        `Best deployed model: ${info.architecture || "-"}\n` +
-        `Best enhanced architecture: ${bestEnhanced}\n` +
-        `RMSE improvement vs baseline: ${rmseImprovement != null ? Number(rmseImprovement).toFixed(2) + "%" : "-"}\n` +
-        `MAPE improvement vs baseline: ${mapeImprovement != null ? Number(mapeImprovement).toFixed(2) + "%" : "-"}`;
-
-      perfTableBodyEl.innerHTML = "";
-
-      const ranking = comparison.ranking_by_rmse || [];
-      ranking.forEach((row) => {
-        const matchingResult = results.find(r => r.architecture === row.architecture);
-        const mae = matchingResult?.metrics?.mae != null ? Number(matchingResult.metrics.mae).toFixed(2) : "-";
-        const r2 = matchingResult?.metrics?.r2 != null ? Number(matchingResult.metrics.r2).toFixed(3) : "-";
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${row.rank}</td>
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${row.architecture}</td>
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${Number(row.rmse).toFixed(2)}</td>
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${mae}</td>
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${Number(row.mape).toFixed(2)}%</td>
-          <td style="padding:8px; border-bottom:1px solid rgba(148,163,184,0.2);">${r2}</td>
-        `;
-        perfTableBodyEl.appendChild(tr);
-      });
-    } catch (err) {
-      perfSummaryEl.textContent = `Failed to load model performance: ${err.message}`;
-  }
-}
-
-
-    function activateTab(tabId) {
-      tabButtons.forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.tabTarget === tabId);
-      });
-      tabPanels.forEach((panel) => {
-        panel.classList.toggle("active", panel.id === tabId);
-      });
-      if (tabId === "explainTab") {
-        setTimeout(renderTrendChart, 50);
+    async function runContinuousUpdate() {
+      updateStatus(els.updateStatus, "Running continuous update...");
+      try {
+        const body = {
+          new_rows_limit: Number(els.updateRowsLimit.value),
+          fine_tune_epochs: Number(els.updateEpochs.value),
+          batch_size: Number(els.updateBatchSize.value),
+          dry_run: els.updateDryRun.value === "true",
+        };
+        const result = await apiFetch("/continuous/update", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        setResponseBox(els.updateResponse, result);
+        updateStatus(els.updateStatus, body.dry_run ? "Dry-run update complete" : "Continuous update complete");
+      } catch (error) {
+        updateStatus(els.updateStatus, error.message, true);
+        setResponseBox(els.updateResponse, error.message, true);
       }
     }
 
-    document.getElementById("refreshScriptsBtn").onclick = refreshScripts;
-    document.getElementById("runScriptBtn").onclick = runSelectedScript;
-    document.getElementById("mpcDefaultsBtn").onclick = loadMpcDefaults;
-    document.getElementById("mpcRunBtn").onclick = runMpcSimulation;
-    document.getElementById("mpcScenarioBtn").onclick = runMpcScenarioBenchmark;
-    document.getElementById("renderTrendBtn").onclick = renderTrendChart;
-    document.getElementById("resetTrendZoomBtn").onclick = () => {
-      trendFocusFeature = null;
-      renderTrendChart();
-    };
+    function bindActions() {
+      els.loadSampleBtn.addEventListener("click", () => {
+        applyPayloadToAllTextareas(state.samplePayload?.data || []);
+        updateStatus(els.predictStatus, "Loaded sample payload");
+      });
 
-    document.getElementById("runExplainBtn").onclick = runExplainability;
-    pipelineFromSampleBtn.onclick = buildPipelineSampleFromCurrentPayload;
-    document.getElementById("runExplainBtn").onclick = runExplainability;
-    pipelineFromSampleBtn.onclick = buildPipelineSampleFromCurrentPayload;
-    usePipelinePredictEl.onchange = setPipelinePanelVisibility;
-    usePipelineMpcEl.onchange = setPipelinePanelVisibility;
-    scriptSelectEl.onchange = loadSelectedFile;
-    tabButtons.forEach((btn) => {
-      btn.onclick = () => activateTab(btn.dataset.tabTarget);
-    });
+      els.loadDatasetBtn.addEventListener("click", async () => {
+        try {
+          await loadDatasetWindow(els.datasetSplit.value, Number(els.datasetIndex.value));
+        } catch (error) {
+          updateStatus(els.predictStatus, error.message, true);
+        }
+      });
 
-    // Auto-load sample on first visit to reduce confusion.
-    loadPipelineDefaults();
-    refreshModelInfo();
-    loadModelPerformance();
-    loadMpcDefaults();
-    loadExplainDefaults();
-    document.getElementById("sampleBtn").click();
-    setPipelinePanelVisibility();
-    setTimeout(renderTrendChart, 300);
-    refreshScripts();
+      els.runPredictBtn.addEventListener("click", runPrediction);
+      els.clearPredictBtn.addEventListener("click", () => {
+        els.predictPayload.value = "";
+        els.predictMergedRows.value = "[]";
+        els.predictGreenhouseRows.value = "[]";
+        els.predictWeatherRows.value = "[]";
+        setResponseBox(els.predictResponse, "Prediction response will appear here.");
+        renderPredictionCards({});
+        updateStatus(els.predictStatus, "Cleared");
+      });
+
+      els.loadMpcDefaultsBtn.addEventListener("click", loadDefaultTextareas);
+      els.useDatasetForMpcBtn.addEventListener("click", () => {
+        els.mpcInitialData.value = JSON.stringify(getCurrentDataOrFallback(), null, 2);
+        updateStatus(els.mpcStatus, "Loaded current dataset window into MPC");
+      });
+      els.runMpcBtn.addEventListener("click", runMpcSimulation);
+      els.runScenarioBtn.addEventListener("click", runScenarioBenchmark);
+
+      els.useDatasetForExplainBtn.addEventListener("click", () => {
+        els.explainInputData.value = JSON.stringify(getCurrentDataOrFallback(), null, 2);
+        updateStatus(els.explainStatus, "Loaded current dataset window into explainability input");
+      });
+      els.runExplainBtn.addEventListener("click", runExplainability);
+
+      els.renderTrendsBtn.addEventListener("click", () => renderTrends(false));
+      els.useCurrentWindowBtn.addEventListener("click", () => renderTrends(true));
+
+      els.refreshScriptsBtn.addEventListener("click", refreshFiles);
+      els.runScriptBtn.addEventListener("click", runScript);
+      els.scriptSelect.addEventListener("change", (event) => loadScriptSource(event.target.value));
+
+      els.runUpdateBtn.addEventListener("click", runContinuousUpdate);
+    }
+
+    function init() {
+      bindTabs();
+      buildMobileTabs();
+      bindPredictModeToggle();
+      bindActions();
+      renderPredictionCards({});
+      drawEmptyCanvas(els.trendCanvas, "Trend chart will render here");
+      drawEmptyCanvas(els.heatmapCanvas, "Heatmap will render here");
+      drawEmptyCanvas(els.mpcCanvas, "MPC trajectory will render here");
+      loadBootstrapData().then(() => renderTrends(true)).catch(() => {});
+    }
+
+    init();
   </script>
 </body>
 </html>
